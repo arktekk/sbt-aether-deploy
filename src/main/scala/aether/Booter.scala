@@ -10,6 +10,8 @@ import org.sonatype.aether.connector.wagon.{WagonRepositoryConnectorFactory, Wag
 import org.sonatype.aether.connector.file.FileRepositoryConnectorFactory
 import org.apache.maven.repository.internal.{MavenServiceLocator, MavenRepositorySystemSession}
 import sbt.std.TaskStreams
+import org.apache.maven.wagon.providers.ssh.jsch.{SftpWagon, ScpWagon}
+import org.apache.maven.wagon.providers.ftp.FtpWagon
 
 object Booter {
   def newRepositorySystem = {
@@ -34,6 +36,9 @@ object Booter {
     def lookup(roleHint: String ): Wagon = {
       roleHint match {
         case "http" => new AhcWagon()
+        case "scp" => new ScpWagon()
+        case "sftp" => new SftpWagon()
+        case "ftp" => new FtpWagon()
         case _ => throw new IllegalArgumentException("Unknown wagon type")
       }
     }

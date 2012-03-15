@@ -30,7 +30,9 @@ libraryDependencies ++= {
 	"org.sonatype.aether" % "aether-connector-file" % "1.13.1",
 	"org.apache.maven.wagon" % "wagon-provider-api" % wagonVersion,
 	"org.sonatype.maven" % "wagon-ahc" % "1.2.1",
-	"org.codehaus.plexus" % "plexus-utils" % "2.1"
+	"org.codehaus.plexus" % "plexus-utils" % "2.1",
+	"org.apache.maven.wagon" % "wagon-ftp" % wagonVersion,
+	"org.apache.maven.wagon" % "wagon-ssh" % wagonVersion
 )}
 
 seq(ScriptedPlugin.scriptedSettings: _*)
