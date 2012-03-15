@@ -9,6 +9,7 @@ import org.sonatype.maven.wagon.AhcWagon
 import org.sonatype.aether.connector.wagon.{WagonRepositoryConnectorFactory, WagonProvider}
 import org.sonatype.aether.connector.file.FileRepositoryConnectorFactory
 import org.apache.maven.repository.internal.{MavenServiceLocator, MavenRepositorySystemSession}
+import sbt.std.TaskStreams
 
 object Booter {
   def newRepositorySystem = {
@@ -19,13 +20,13 @@ object Booter {
     locator.getService(classOf[RepositorySystem])
   }
 
-  def newSession(implicit system: RepositorySystem, localRepoDir: File): RepositorySystemSession = {
+  def newSession(implicit system: RepositorySystem, localRepoDir: File, streams: TaskStreams[_]): RepositorySystemSession = {
       val session = new MavenRepositorySystemSession()
 
       val localRepo = new LocalRepository(localRepoDir);
       session.setLocalRepositoryManager(system.newLocalRepositoryManager(localRepo))
-      session.setTransferListener(new ConsoleTransferListener())
-      session.setRepositoryListener(new ConsoleRepositoryListener())
+      session.setTransferListener(new ConsoleTransferListener(streams.log))
+      session.setRepositoryListener(new ConsoleRepositoryListener(streams.log))
       session
   }
 

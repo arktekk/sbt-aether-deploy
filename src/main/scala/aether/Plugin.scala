@@ -36,10 +36,10 @@ object Aether extends sbt.Plugin {
 
     lazy val printer = deploy <<= (organization) map ((o: String) => println(o))
     
-    lazy val deployTask = deploy <<= (deployRepository, aetherCredentials, packageTaskKey in (Compile), makePom, coordinates, attachedArtifacts).map{
-      (repo: MavenRepository, cred: Option[Credentials], artifactFile: File, pom: File, c: MavenCoordinates, attached: Seq[AetherSubArtifact]) => {
+    lazy val deployTask = deploy <<= (deployRepository, aetherCredentials, packageTaskKey in (Compile), makePom, coordinates, attachedArtifacts, streams).map{
+      (repo: MavenRepository, cred: Option[Credentials], artifactFile: File, pom: File, c: MavenCoordinates, attached: Seq[AetherSubArtifact], s: TaskStreams) => {
       val artifact = AetherArtifact(artifactFile, c, List(AetherSubArtifact(pom, None, "pom")) ++ attached)
-      deployIt(artifact, repo, cred)
+      deployIt(artifact, repo, cred)(s)
     }}
 
     
@@ -52,8 +52,7 @@ object Aether extends sbt.Plugin {
       r
     }
 
-    def deployIt(artifact: AetherArtifact, repo: MavenRepository, credentials: Option[Credentials]) {
-      println("Deploying %s to %s".format(artifact.coordinates.coordinates, repo.root))
+    def deployIt(artifact: AetherArtifact, repo: MavenRepository, credentials: Option[Credentials])(implicit streams: TaskStreams) {
       val request = new DeployRequest()
       request.setRepository(toRepository(repo, credentials))
       val parent = artifact.toArtifact
