@@ -11,3 +11,7 @@ resolvers += Resolver.url("Typesafe repository", new java.net.URL("http://typesa
 libraryDependencies <+= (sbtVersion) { sv =>
   "org.scala-tools.sbt" %% "scripted-plugin" % sv
 }
+
+resolvers += Resolver.url("scalasbt", new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+
+addSbtPlugin("com.jsuereth" % "xsbt-gpg-plugin" % "0.5")

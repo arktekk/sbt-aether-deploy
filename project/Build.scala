@@ -20,7 +20,9 @@ object Build extends sbt.Build {
       manifestSetting,
       publishSetting,
       sbtPlugin := true,
-      credentials += Credentials(Path.userHome / ".sbt" / "arktekk-credentials")
+      credentials += Credentials(Path.userHome / ".sbt" / "arktekk-credentials"),
+	  pomIncludeRepository := { x => false }
+
     ) ++ mavenCentralFrouFrou ++ ScriptedPlugin.scriptedSettings
   )
 
