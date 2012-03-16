@@ -20,4 +20,8 @@
 
 	seq(aether.Aether.aetherSettings: _*)
 
+# Usage
 
+# Usage
+
+	sbt aether-deployy
