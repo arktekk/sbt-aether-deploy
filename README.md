@@ -1,5 +1,11 @@
 # SBT aether deploy plugin
 
+Deploys sbt-artifacts using Sonatype aether. 
+Aether is the same library as maven itself uses, meaning that the same behaviour should be expected.
+NOTE: Does not support adding gpg-signatures by default; need to figure out how that works. 
+
+There is support for adding arbitrary artifacts via the attachedArtifacts setting.
+
 ## project/plugins.sbt
 
 	...
@@ -24,4 +30,4 @@
 
 # Usage
 
-	sbt aether-deployy
+	sbt aether-deploy
