@@ -1,0 +1,7 @@
+# Deploy to file url
+> aether-deploy
+$ exists target/repo/deploy
+$ exists target/repo/deploy/webapp_2.9.1/maven-metadata.xml
+$ exists target/repo/deploy/webapp_2.9.1/0.1/
+$ exists target/repo/deploy/webapp_2.9.1/0.1/webapp_2.9.1-0.1.war
+$ exists target/repo/deploy/webapp_2.9.1/0.1/webapp_2.9.1-0.1.pom

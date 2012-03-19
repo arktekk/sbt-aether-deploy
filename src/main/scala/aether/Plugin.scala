@@ -20,15 +20,19 @@ object Aether extends sbt.Plugin {
 
   import AetherKeys._
 
-  lazy val aetherSettings = inConfig(Compile)(baseAetherSettings)
+  lazy val aetherSettings = withPackage(packageBin)
 
-  lazy val defaultAttaches = (packageSrc, packageDoc) map {(src: File, scaladoc: File) => Seq(AetherSubArtifact(src, Some("sources")), AetherSubArtifact(scaladoc, Some("javadoc")))}
+  lazy val defaultAttaches = (packageSrc in (Compile), packageDoc in (Compile)) map {(src: File, scaladoc: File) => Seq(AetherSubArtifact(src, Some("sources")), AetherSubArtifact(scaladoc, Some("javadoc")))}
+
+  lazy val defaultCoordinates = coordinates <<= (organization, name, version, scalaVersion).apply{(o, n, v, sv) => MavenCoordinates(o, n + "_" + sv, v, None)}
 
   lazy val baseAetherSettings: Seq[Setting[_]] = Seq(
     attachedArtifacts <<= defaultAttaches,
     aetherCredentials := None,
-    coordinates <<= (organization, name, version, scalaVersion).apply{(o, n, v, sv) => MavenCoordinates(o, n + "_" + sv, v, None)}
-  ) ++ AetherDeploy.apply()
+    defaultCoordinates
+  )
+
+  def withPackage(packageTaskKey: TaskKey[File]) = inConfig(Compile)(baseAetherSettings) ++ AetherDeploy(packageTaskKey)
   
   class AetherDeploy(packageTaskKey: TaskKey[File]) {
 
@@ -37,11 +41,16 @@ object Aether extends sbt.Plugin {
     lazy val printer = deploy <<= (organization) map ((o: String) => println(o))
     
     lazy val deployTask = deploy <<= (deployRepository, aetherCredentials, packageTaskKey in (Compile), makePom, coordinates, attachedArtifacts, streams).map{
-      (repo: MavenRepository, cred: Option[Credentials], artifactFile: File, pom: File, c: MavenCoordinates, attached: Seq[AetherSubArtifact], s: TaskStreams) => {
-      val artifact = AetherArtifact(artifactFile, c, List(AetherSubArtifact(pom, None, "pom")) ++ attached)
+      (repo: MavenRepository, cred: Option[Credentials], artifactFile: File, pom: File, c: MavenCoordinates, attached: Seq[AetherSubArtifact], s: TaskStreams) => {      
+      val actualCoordinate = c.copy(extension = getActualExtension(artifactFile))
+      val artifact = AetherArtifact(artifactFile, actualCoordinate, List(AetherSubArtifact(pom, None, "pom")) ++ attached)
       deployIt(artifact, repo, cred)(s)
     }}
 
+    def getActualExtension(file: File) = {
+      val name = file.getName()
+      name.substring(name.lastIndexOf('.') + 1)
+    }
     
     def toRepository(repo: MavenRepository, credentials: Option[Credentials]) = {
       val r = new RemoteRepository(repo.name, "default", repo.root)
@@ -73,7 +82,7 @@ object Aether extends sbt.Plugin {
   object AetherDeploy {
     def apply(packageTaskKey: TaskKey[File]): Seq[Setting[_]] = {
       val deploy = new AetherDeploy(packageTaskKey)
-      Seq(deploy.deployTask)
+      inConfig(Compile)(Seq(deploy.deployTask))
     }
 
     def apply(): Seq[Setting[_]] = apply(packageBin)
