@@ -9,7 +9,7 @@ There is support for adding arbitrary artifacts via the attachedArtifacts settin
 ## project/plugins.sbt
 
 	...
-	addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.2")
+	addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.3")
 	...
 
 
