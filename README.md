@@ -9,13 +9,13 @@ There is support for adding arbitrary artifacts via the attachedArtifacts settin
 ## project/plugins.sbt
 
 	...
-	addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.1")
+	addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.2")
 	...
 
 
 ## Build file
 	
-	aether.AetherKeys.deployRepository  <<= (version: String) {
+	deployRepository  <<= (version: String) {
 	  if (version.endsWith("SNAPSHOT") {
 	    "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 	  }
@@ -24,7 +24,7 @@ There is support for adding arbitrary artifacts via the attachedArtifacts settin
 	  }
 	} 
 
-	seq(aether.Aether.aetherSettings: _*)
+	seq(aetherSettings: _*)
 
 # Usage
 

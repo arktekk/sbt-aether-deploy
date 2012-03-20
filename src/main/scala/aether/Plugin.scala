@@ -8,87 +8,73 @@ import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.repository.{Authentication, RemoteRepository}
 
 object AetherKeys {
-  lazy val attachedArtifacts = TaskKey[Seq[AetherSubArtifact]]("aether-attached-artifacts", "Attach these artifacts to the deployment, typically sources and scaladoc")
+  lazy val aetherArtifact = TaskKey[AetherArtifact]("aether-artifact", "Main artifact")
   lazy val aetherCredentials = SettingKey[Option[Credentials]]("aether-credentials", "Use these credentials when deploying")
   lazy val deployRepository = SettingKey[MavenRepository]("aether-deploy-repository", "Deploy to this repository")
   lazy val coordinates = SettingKey[MavenCoordinates]("aether-coordinates", "The maven coordinates to the main artifact. Should not be overridden")
-
+  lazy val deploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
 }
 
 
 object Aether extends sbt.Plugin {
 
-  import AetherKeys._
+  def deployRepository = AetherKeys.deployRepository in Global
+  def aetherCredentials = AetherKeys.aetherCredentials in Global
+  def deploy = AetherKeys.deploy in Global
 
-  lazy val aetherSettings = withPackage(packageBin)
-
-  lazy val defaultAttaches = (packageSrc in (Compile), packageDoc in (Compile)) map {(src: File, scaladoc: File) => Seq(AetherSubArtifact(src, Some("sources")), AetherSubArtifact(scaladoc, Some("javadoc")))}
-
-  lazy val defaultCoordinates = coordinates <<= (organization, name, version, scalaVersion).apply{(o, n, v, sv) => MavenCoordinates(o, n + "_" + sv, v, None)}
-
-  lazy val baseAetherSettings: Seq[Setting[_]] = Seq(
-    attachedArtifacts <<= defaultAttaches,
-    aetherCredentials := None,
-    defaultCoordinates
+  lazy val aetherSettings: Seq[Setting[_]] = Seq(
+    AetherKeys.aetherCredentials := None,
+    defaultCoordinates,
+    defaultArtifact,
+    deployTask
   )
 
-  def withPackage(packageTaskKey: TaskKey[File]) = inConfig(Compile)(baseAetherSettings) ++ AetherDeploy(packageTaskKey)
+  lazy val defaultCoordinates = AetherKeys.coordinates <<= (organization, name, version, scalaVersion).apply{(o, n, v, sv) => MavenCoordinates(o, n + "_" + sv, v, None)}
   
-  class AetherDeploy(packageTaskKey: TaskKey[File]) {
+  lazy val defaultArtifact = AetherKeys.aetherArtifact <<= (AetherKeys.coordinates, Keys.`package` in Compile, makePom in Compile, packagedArtifacts in Compile) map {
+    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) => {
+      val subartifacts = artifacts.filterNot{case (a, f) => a.classifier == None && !a.extension.contains("asc")}
+      val actualSubArtifacts = AetherSubArtifact(pom, None, "pom") +: subartifacts.foldLeft(Vector[AetherSubArtifact]()){case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq}
+      val actualCoords = coords.copy(extension = getActualExtension(mainArtifact))
+      AetherArtifact(mainArtifact, actualCoords, actualSubArtifacts)
+    }
+  }
 
-    lazy val deploy = TaskKey[Unit]("aether-deploy", "Deploy artifact using Aether")
-
-    lazy val printer = deploy <<= (organization) map ((o: String) => println(o))
-    
-    lazy val deployTask = deploy <<= (deployRepository, aetherCredentials, packageTaskKey in (Compile), makePom, coordinates, attachedArtifacts, streams).map{
-      (repo: MavenRepository, cred: Option[Credentials], artifactFile: File, pom: File, c: MavenCoordinates, attached: Seq[AetherSubArtifact], s: TaskStreams) => {      
-      val actualCoordinate = c.copy(extension = getActualExtension(artifactFile))
-      val artifact = AetherArtifact(artifactFile, actualCoordinate, List(AetherSubArtifact(pom, None, "pom")) ++ attached)
+  lazy val deployTask = AetherKeys.deploy <<= (AetherKeys.deployRepository, AetherKeys.aetherCredentials, AetherKeys.aetherArtifact, streams).map{
+    (repo: MavenRepository, cred: Option[Credentials], artifact: AetherArtifact, s: TaskStreams) => {
       deployIt(artifact, repo, cred)(s)
     }}
 
-    def getActualExtension(file: File) = {
-      val name = file.getName()
-      name.substring(name.lastIndexOf('.') + 1)
-    }
+  private def getActualExtension(file: File) = {
+    val name = file.getName
+    name.substring(name.lastIndexOf('.') + 1)
+  }
     
-    def toRepository(repo: MavenRepository, credentials: Option[Credentials]) = {
-      val r = new RemoteRepository(repo.name, "default", repo.root)
-      if (credentials.isDefined) {
-        val direct = Credentials.toDirect(credentials.get)
-        r.setAuthentication(new Authentication(direct.userName, direct.passwd))
-      }
-      r
+  private def toRepository(repo: MavenRepository, credentials: Option[Credentials]) = {
+    val r = new RemoteRepository(repo.name, "default", repo.root)
+    if (credentials.isDefined) {
+      val direct = Credentials.toDirect(credentials.get)
+      r.setAuthentication(new Authentication(direct.userName, direct.passwd))
     }
-
-    def deployIt(artifact: AetherArtifact, repo: MavenRepository, credentials: Option[Credentials])(implicit streams: TaskStreams) {
-      val request = new DeployRequest()
-      request.setRepository(toRepository(repo, credentials))
-      val parent = artifact.toArtifact
-      request.addArtifact(parent)
-      artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
-      implicit val system = Booter.newRepositorySystem
-      implicit val localRepo = Path.userHome / ".m2" / "repository"
-
-      try {
-        system.deploy(Booter.newSession, request)
-      }
-      catch {
-        case e => e.printStackTrace(); throw e
-      }
-    }
+    r
   }
 
-  object AetherDeploy {
-    def apply(packageTaskKey: TaskKey[File]): Seq[Setting[_]] = {
-      val deploy = new AetherDeploy(packageTaskKey)
-      inConfig(Compile)(Seq(deploy.deployTask))
+  private def deployIt(artifact: AetherArtifact, repo: MavenRepository, credentials: Option[Credentials])(implicit streams: TaskStreams) {
+    val request = new DeployRequest()
+    request.setRepository(toRepository(repo, credentials))
+    val parent = artifact.toArtifact
+    request.addArtifact(parent)
+    artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
+    implicit val system = Booter.newRepositorySystem
+    implicit val localRepo = Path.userHome / ".m2" / "repository"
+
+    try {
+      system.deploy(Booter.newSession, request)
     }
-
-    def apply(): Seq[Setting[_]] = apply(packageBin)
+    catch {
+      case e => e.printStackTrace(); throw e
+    }
   }
-
-
 }
 
 case class MavenCoordinates(groupId: String, artifactId: String, version: String, classifier: Option[String], extension: String = "jar") {
@@ -105,17 +91,13 @@ object MavenCoordinates {
 
     case _ => None
   }
-
-  def apply(groupId: String, version: String, artifact: Artifact) = {
-    new MavenCoordinates(groupId, artifact.name, version, artifact.classifier, artifact.extension)
-  }
 }
 
 case class AetherSubArtifact(file: File, classifier: Option[String] = None, extension: String = "jar") {
   def toArtifact(parent: DefaultArtifact) = new SubArtifact(parent, classifier.orNull, extension, file)
 }
 
-case class AetherArtifact(file: File, coordinates: MavenCoordinates, subartifacts: List[AetherSubArtifact] = Nil) {
+case class AetherArtifact(file: File, coordinates: MavenCoordinates, subartifacts: Seq[AetherSubArtifact] = Nil) {
   def toArtifact = new DefaultArtifact(
     coordinates.groupId,
     coordinates.artifactId,

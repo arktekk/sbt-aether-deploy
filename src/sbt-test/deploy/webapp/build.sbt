@@ -4,8 +4,8 @@ name := "webapp"
 
 organization := "deploy"
 
-aether.AetherKeys.deployRepository  := "foo" at (file(".") / "target" / "repo").toURI.toURL.toString
+deployRepository  := "foo" at (file(".") / "target" / "repo").toURI.toURL.toString
 
 seq(webappSettings :_*)
 
-seq(aether.Aether.withPackage(packageWar) :_*)
+seq(aetherSettings: _*)
