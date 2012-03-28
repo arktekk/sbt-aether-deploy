@@ -36,6 +36,7 @@ object Booter {
     def lookup(roleHint: String ): Wagon = {
       roleHint match {
         case "http" => new AhcWagon()
+        case "https" => new AhcWagon()
         case "scp" => new ScpWagon()
         case "sftp" => new SftpWagon()
         case "ftp" => new FtpWagon()
