@@ -5,9 +5,7 @@ object Build extends sbt.Build {
   import Dependencies._
 	
   lazy val buildSettings = Defaults.defaultSettings ++ Seq(
-	organization := "no.arktekk.sbt",
-	scalaVersion := "2.9.1",
-	crossScalaVersions := Seq("2.9.1") // Seq("2.9.0", "2.9.1"),
+	organization := "no.arktekk.sbt"
   )
   lazy val root = Project(
     id = "sbt-aether-deploy",
