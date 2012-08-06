@@ -6,32 +6,25 @@ import java.util.Collections
 import org.sonatype.aether.util.artifact.{SubArtifact, DefaultArtifact}
 import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.repository.{Authentication, RemoteRepository}
-
-object AetherKeys {
-  lazy val aetherArtifact = TaskKey[AetherArtifact]("aether-artifact", "Main artifact")
-  lazy val aetherCredentials = SettingKey[Option[Credentials]]("aether-credentials", "Use these credentials when deploying")
-  lazy val deployRepository = SettingKey[MavenRepository]("aether-deploy-repository", "Deploy to this repository")
-  lazy val coordinates = SettingKey[MavenCoordinates]("aether-coordinates", "The maven coordinates to the main artifact. Should not be overridden")
-  lazy val deploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
-}
-
+import java.net.URI
 
 object Aether extends sbt.Plugin {
+  lazy val aetherArtifact = TaskKey[AetherArtifact]("aether-artifact", "Main artifact")
+  lazy val coordinates = SettingKey[MavenCoordinates]("aether-coordinates", "The maven coordinates to the main artifact. Should not be overridden")
+  lazy val deploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
 
-  def deployRepository = AetherKeys.deployRepository in Global
-  def aetherCredentials = AetherKeys.aetherCredentials in Global
-  def deploy = AetherKeys.deploy in Global
 
   lazy val aetherSettings: Seq[Setting[_]] = Seq(
-    AetherKeys.aetherCredentials := None,
     defaultCoordinates,
     defaultArtifact,
     deployTask
   )
 
-  lazy val defaultCoordinates = AetherKeys.coordinates <<= (organization, name, version, scalaVersion).apply{(o, n, v, sv) => MavenCoordinates(o, n + "_" + sv, v, None)}
+  lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
+
+  lazy val defaultCoordinates = coordinates <<= (organization, name, version, scalaVersion).apply{(o, n, v, sv) => MavenCoordinates(o, n + "_" + sv, v, None)}
   
-  lazy val defaultArtifact = AetherKeys.aetherArtifact <<= (AetherKeys.coordinates, Keys.`package` in Compile, makePom in Compile, packagedArtifacts in Compile) map {
+  lazy val defaultArtifact = aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, packagedArtifacts in Compile) map {
     (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) => {
       val subartifacts = artifacts.filterNot{case (a, f) => a.classifier == None && !a.extension.contains("asc")}
       val actualSubArtifacts = AetherSubArtifact(pom, None, "pom") +: subartifacts.foldLeft(Vector[AetherSubArtifact]()){case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq}
@@ -40,9 +33,23 @@ object Aether extends sbt.Plugin {
     }
   }
 
-  lazy val deployTask = AetherKeys.deploy <<= (AetherKeys.deployRepository, AetherKeys.aetherCredentials, AetherKeys.aetherArtifact, streams).map{
-    (repo: MavenRepository, cred: Option[Credentials], artifact: AetherArtifact, s: TaskStreams) => {
-      deployIt(artifact, repo, cred)(s)
+  lazy val deployTask = deploy <<= (publishTo, credentials, aetherArtifact, streams).map{
+    (repo: Option[Resolver], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams) => {
+      val repository = repo.collect{
+        case x: MavenRepository => x
+        case _ => sys.error("The configured repo MUST be a maven repo")
+      }.getOrElse(sys.error("There MUST be a configured publish repo"))
+      val maybeCred = scala.util.control.Exception.allCatch.opt(
+        URI.create(repository.root)
+      ).flatMap(href => {
+        val c = Credentials.forHost(cred, href.getHost)
+        if (c.isEmpty) {
+          s.log.warn("No credentials supplied for %s".format(href.getHost))
+        }
+        c
+      })
+
+      deployIt(artifact, repository, maybeCred)(s)
     }}
 
   private def getActualExtension(file: File) = {
@@ -50,16 +57,15 @@ object Aether extends sbt.Plugin {
     name.substring(name.lastIndexOf('.') + 1)
   }
     
-  private def toRepository(repo: MavenRepository, credentials: Option[Credentials]) = {
+  private def toRepository(repo: MavenRepository, credentials: Option[DirectCredentials]) = {
     val r = new RemoteRepository(repo.name, "default", repo.root)
-    if (credentials.isDefined) {
-      val direct = Credentials.toDirect(credentials.get)
-      r.setAuthentication(new Authentication(direct.userName, direct.passwd))
-    }
+    credentials.foreach(c => {
+      r.setAuthentication(new Authentication(c.userName, c.passwd))
+    })
     r
   }
 
-  private def deployIt(artifact: AetherArtifact, repo: MavenRepository, credentials: Option[Credentials])(implicit streams: TaskStreams) {
+  private def deployIt(artifact: AetherArtifact, repo: MavenRepository, credentials: Option[DirectCredentials])(implicit streams: TaskStreams) {
     val request = new DeployRequest()
     request.setRepository(toRepository(repo, credentials))
     val parent = artifact.toArtifact
@@ -72,7 +78,7 @@ object Aether extends sbt.Plugin {
       system.deploy(Booter.newSession, request)
     }
     catch {
-      case e => e.printStackTrace(); throw e
+      case e: Exception => e.printStackTrace(); throw e
     }
   }
 }
