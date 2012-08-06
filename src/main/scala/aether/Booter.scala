@@ -15,7 +15,7 @@ import org.apache.maven.wagon.providers.ftp.FtpWagon
 
 object Booter {
   def newRepositorySystem = {
-    val locator = new MavenServiceLocator();
+    val locator = new MavenServiceLocator()
     locator.addService(classOf[RepositoryConnectorFactory], classOf[FileRepositoryConnectorFactory])
     locator.addService(classOf[RepositoryConnectorFactory], classOf[WagonRepositoryConnectorFactory])
     locator.setServices(classOf[WagonProvider], ManualWagonProvider)
@@ -25,13 +25,14 @@ object Booter {
   def newSession(implicit system: RepositorySystem, localRepoDir: File, streams: TaskStreams[_]): RepositorySystemSession = {
       val session = new MavenRepositorySystemSession()
 
-      val localRepo = new LocalRepository(localRepoDir);
+      val localRepo = new LocalRepository(localRepoDir)
       session.setLocalRepositoryManager(system.newLocalRepositoryManager(localRepo))
       session.setTransferListener(new ConsoleTransferListener(streams.log))
       session.setRepositoryListener(new ConsoleRepositoryListener(streams.log))
       session
   }
 
+  //TODO: Separate this into its own plugin.
   object ManualWagonProvider extends WagonProvider {
     def lookup(roleHint: String ): Wagon = {
       roleHint match {
