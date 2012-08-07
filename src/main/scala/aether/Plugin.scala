@@ -22,7 +22,13 @@ object Aether extends sbt.Plugin {
 
   lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
 
-  lazy val defaultCoordinates = coordinates <<= (organization, name, version, scalaVersion).apply{(o, n, v, sv) => MavenCoordinates(o, n + "_" + sv, v, None)}
+  lazy val defaultCoordinates = coordinates <<= (organization, name, version, scalaBinaryVersion, sbtPlugin, sbtBinaryVersion).apply{
+    (o, n, v, scalaV, plugin, sbtBV) => {
+      val extra = if (plugin) ("_" + sbtBV) else ""
+      val aId = "%s_%s%s".format(n, scalaV, extra)
+      MavenCoordinates(o, aId, v, None)
+    }
+  }
   
   lazy val defaultArtifact = aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, packagedArtifacts in Compile) map {
     (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) => {
