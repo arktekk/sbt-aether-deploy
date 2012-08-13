@@ -5,20 +5,19 @@ import org.sonatype.aether.{RepositorySystemSession, RepositorySystem}
 import java.io.File
 import org.sonatype.aether.spi.connector.RepositoryConnectorFactory
 import org.apache.maven.wagon.Wagon
-import org.sonatype.maven.wagon.AhcWagon
 import org.sonatype.aether.connector.wagon.{WagonRepositoryConnectorFactory, WagonProvider}
 import org.sonatype.aether.connector.file.FileRepositoryConnectorFactory
 import org.apache.maven.repository.internal.{MavenServiceLocator, MavenRepositorySystemSession}
 import sbt.std.TaskStreams
-import org.apache.maven.wagon.providers.ssh.jsch.{SftpWagon, ScpWagon}
-import org.apache.maven.wagon.providers.ftp.FtpWagon
+import org.sonatype.aether.connector.async.AsyncRepositoryConnectorFactory
 
 object Booter {
-  def newRepositorySystem = {
+  def newRepositorySystem(wagons: Seq[WagonWrapper]) = {
     val locator = new MavenServiceLocator()
     locator.addService(classOf[RepositoryConnectorFactory], classOf[FileRepositoryConnectorFactory])
+    locator.addService(classOf[RepositoryConnectorFactory], classOf[AsyncRepositoryConnectorFactory])
     locator.addService(classOf[RepositoryConnectorFactory], classOf[WagonRepositoryConnectorFactory])
-    locator.setServices(classOf[WagonProvider], ManualWagonProvider)
+    locator.setServices(classOf[WagonProvider], new ExtraWagonProvider(wagons))
     locator.getService(classOf[RepositorySystem])
   }
 
@@ -32,19 +31,20 @@ object Booter {
       session
   }
 
-  //TODO: Separate this into its own plugin.
-  object ManualWagonProvider extends WagonProvider {
+  private class ExtraWagonProvider(wagons: Seq[WagonWrapper]) extends WagonProvider {
+    private val map = wagons.map(w => w.scheme -> w.wagon).toMap
+
     def lookup(roleHint: String ): Wagon = {
-      roleHint match {
-        case "http" => new AhcWagon()
-        case "https" => new AhcWagon()
-        case "scp" => new ScpWagon()
-        case "sftp" => new SftpWagon()
-        case "ftp" => new FtpWagon()
-        case _ => throw new IllegalArgumentException("Unknown wagon type")
-      }
+      map.get(roleHint).getOrElse(throw new IllegalArgumentException("Unknown wagon type"))
     }
 
-    def release(wagon: Wagon){}
+    def release(wagon: Wagon){
+      try {
+        if (wagon != null) wagon.disconnect()
+      }
+      catch {
+        case e:Exception => e.printStackTrace()
+      }
+    }
   }
 }

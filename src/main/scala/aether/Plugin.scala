@@ -7,14 +7,16 @@ import org.sonatype.aether.util.artifact.{SubArtifact, DefaultArtifact}
 import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.repository.{Authentication, RemoteRepository}
 import java.net.URI
+import org.apache.maven.wagon.Wagon
 
 object Aether extends sbt.Plugin {
   lazy val aetherArtifact = TaskKey[AetherArtifact]("aether-artifact", "Main artifact")
   lazy val coordinates = SettingKey[MavenCoordinates]("aether-coordinates", "The maven coordinates to the main artifact. Should not be overridden")
+  lazy val wagons = SettingKey[Seq[WagonWrapper]]("aether-wagons", "The configured extra maven wagon wrappers.")
   lazy val deploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
 
-
   lazy val aetherSettings: Seq[Setting[_]] = Seq(
+    defaultWagons,
     defaultCoordinates,
     defaultArtifact,
     deployTask
@@ -31,6 +33,8 @@ object Aether extends sbt.Plugin {
       MavenCoordinates(o, aId, v, None)
     }
   }
+
+  lazy val defaultWagons = wagons := Seq.empty
   
   lazy val defaultArtifact = aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, packagedArtifacts in Compile) map {
     (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) => {
@@ -41,8 +45,8 @@ object Aether extends sbt.Plugin {
     }
   }
 
-  lazy val deployTask = deploy <<= (publishTo, credentials, aetherArtifact, streams).map{
-    (repo: Option[Resolver], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams) => {
+  lazy val deployTask = deploy <<= (publishTo, wagons, credentials, aetherArtifact, streams).map{
+    (repo: Option[Resolver], wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams) => {
       val repository = repo.collect{
         case x: MavenRepository => x
         case _ => sys.error("The configured repo MUST be a maven repo")
@@ -57,7 +61,7 @@ object Aether extends sbt.Plugin {
         c
       })
 
-      deployIt(artifact, repository, maybeCred)(s)
+      deployIt(artifact, wag, repository, maybeCred)(s)
     }}
 
   private def getActualExtension(file: File) = {
@@ -73,13 +77,13 @@ object Aether extends sbt.Plugin {
     r
   }
 
-  private def deployIt(artifact: AetherArtifact, repo: MavenRepository, credentials: Option[DirectCredentials])(implicit streams: TaskStreams) {
+  private def deployIt(artifact: AetherArtifact, wagons: Seq[WagonWrapper], repo: MavenRepository, credentials: Option[DirectCredentials])(implicit streams: TaskStreams) {
     val request = new DeployRequest()
     request.setRepository(toRepository(repo, credentials))
     val parent = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
-    implicit val system = Booter.newRepositorySystem
+    implicit val system = Booter.newRepositorySystem(wagons)
     implicit val localRepo = Path.userHome / ".m2" / "repository"
 
     try {

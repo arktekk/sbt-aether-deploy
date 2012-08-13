@@ -32,11 +32,12 @@ object Build extends sbt.Build {
 	  "org.apache.maven" % "maven-aether-provider" % mavenVersion,
 	  "org.sonatype.aether" % "aether-connector-wagon" % "1.13.1",
 	  "org.sonatype.aether" % "aether-connector-file" % "1.13.1",
-	  "org.apache.maven.wagon" % "wagon-provider-api" % wagonVersion,
+    "org.sonatype.aether" % "aether-connector-asynchttpclient" % "1.13.1"
+	  /*"org.apache.maven.wagon" % "wagon-provider-api" % wagonVersion,
 	  "org.sonatype.maven" % "wagon-ahc" % "1.2.1",
 	  "org.codehaus.plexus" % "plexus-utils" % "2.1",
 	  "org.apache.maven.wagon" % "wagon-ftp" % wagonVersion,
-	  "org.apache.maven.wagon" % "wagon-ssh" % wagonVersion
+	  "org.apache.maven.wagon" % "wagon-ssh" % wagonVersion*/
     )
   }
 
