@@ -5,7 +5,7 @@ import org.sonatype.aether.{RepositorySystemSession, RepositorySystem}
 import java.io.File
 import org.sonatype.aether.spi.connector.RepositoryConnectorFactory
 import org.apache.maven.wagon.Wagon
-import org.sonatype.aether.connector.wagon.{WagonRepositoryConnectorFactory, WagonProvider}
+import org.sonatype.aether.connector.wagon.{PlexusWagonConfigurator, WagonConfigurator, WagonRepositoryConnectorFactory, WagonProvider}
 import org.sonatype.aether.connector.file.FileRepositoryConnectorFactory
 import org.apache.maven.repository.internal.{MavenServiceLocator, MavenRepositorySystemSession}
 import sbt.std.TaskStreams
@@ -14,10 +14,13 @@ import org.sonatype.aether.connector.async.AsyncRepositoryConnectorFactory
 object Booter {
   def newRepositorySystem(wagons: Seq[WagonWrapper]) = {
     val locator = new MavenServiceLocator()
+    val factory = new WagonRepositoryConnectorFactory()
+    locator.setServices(classOf[WagonProvider], new ExtraWagonProvider(wagons))
+    locator.setService(classOf[WagonConfigurator], classOf[PlexusWagonConfigurator])
+    locator.setServices(classOf[RepositoryConnectorFactory], factory)
     locator.addService(classOf[RepositoryConnectorFactory], classOf[FileRepositoryConnectorFactory])
     locator.addService(classOf[RepositoryConnectorFactory], classOf[AsyncRepositoryConnectorFactory])
-    locator.addService(classOf[RepositoryConnectorFactory], classOf[WagonRepositoryConnectorFactory])
-    locator.setServices(classOf[WagonProvider], new ExtraWagonProvider(wagons))
+    factory.initService(locator)
     locator.getService(classOf[RepositorySystem])
   }
 
