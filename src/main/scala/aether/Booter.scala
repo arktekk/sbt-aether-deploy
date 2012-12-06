@@ -14,13 +14,15 @@ import org.sonatype.aether.connector.async.AsyncRepositoryConnectorFactory
 object Booter {
   def newRepositorySystem(wagons: Seq[WagonWrapper]) = {
     val locator = new MavenServiceLocator()
-    val factory = new WagonRepositoryConnectorFactory()
+    val wagonRepositoryConnectorFactory = new WagonRepositoryConnectorFactory()
+    val asyncRepositoryConnectorFactory = new AsyncRepositoryConnectorFactory()
+    val fileRepositoryConnectorFactory = new FileRepositoryConnectorFactory()
     locator.setServices(classOf[WagonProvider], new ExtraWagonProvider(wagons))
     locator.setService(classOf[WagonConfigurator], classOf[PlexusWagonConfigurator])
-    locator.setServices(classOf[RepositoryConnectorFactory], factory)
-    locator.addService(classOf[RepositoryConnectorFactory], classOf[FileRepositoryConnectorFactory])
-    locator.addService(classOf[RepositoryConnectorFactory], classOf[AsyncRepositoryConnectorFactory])
-    factory.initService(locator)
+    locator.setServices(classOf[RepositoryConnectorFactory], wagonRepositoryConnectorFactory, fileRepositoryConnectorFactory, asyncRepositoryConnectorFactory)
+    wagonRepositoryConnectorFactory.initService(locator)
+    fileRepositoryConnectorFactory.initService(locator)
+    asyncRepositoryConnectorFactory.initService(locator)
     locator.getService(classOf[RepositorySystem])
   }
 
