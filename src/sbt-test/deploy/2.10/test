@@ -1,0 +1,7 @@
+# Deploy to file url
+> publish
+$ exists target/repo/two-ten
+$ exists target/repo/two-ten/two-ten_2.10/maven-metadata.xml
+$ exists target/repo/two-ten/two-ten_2.10/0.1/
+$ exists target/repo/two-ten/two-ten_2.10/0.1/two-ten_2.10-0.1.jar
+$ exists target/repo/two-ten/two-ten_2.10/0.1/two-ten_2.10-0.1.pom

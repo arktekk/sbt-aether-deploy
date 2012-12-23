@@ -1,0 +1,21 @@
+# Deploy to file url
+> +publish
+$ exists target/repo/multi-publish
+$ exists target/repo/multi-publish/multi-publish_2.9.1/maven-metadata.xml
+$ exists target/repo/multi-publish/multi-publish_2.9.1/0.1/
+$ exists target/repo/multi-publish/multi-publish_2.9.1/0.1/multi-publish_2.9.1-0.1.jar
+$ exists target/repo/multi-publish/multi-publish_2.9.1/0.1/multi-publish_2.9.1-0.1.pom
+
+# 2.9.2
+
+$ exists target/repo/multi-publish/multi-publish_2.9.2/maven-metadata.xml
+$ exists target/repo/multi-publish/multi-publish_2.9.2/0.1/
+$ exists target/repo/multi-publish/multi-publish_2.9.2/0.1/multi-publish_2.9.2-0.1.jar
+$ exists target/repo/multi-publish/multi-publish_2.9.2/0.1/multi-publish_2.9.2-0.1.pom
+
+# 2.10.0
+
+$ exists target/repo/multi-publish/multi-publish_2.10/maven-metadata.xml
+$ exists target/repo/multi-publish/multi-publish_2.10/0.1/
+$ exists target/repo/multi-publish/multi-publish_2.10/0.1/multi-publish_2.10-0.1.jar
+$ exists target/repo/multi-publish/multi-publish_2.10/0.1/multi-publish_2.10-0.1.pom

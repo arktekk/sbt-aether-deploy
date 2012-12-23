@@ -7,7 +7,6 @@ import org.sonatype.aether.util.artifact.{SubArtifact, DefaultArtifact}
 import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.repository.{Authentication, RemoteRepository}
 import java.net.URI
-import org.apache.maven.wagon.Wagon
 
 object Aether extends sbt.Plugin {
   lazy val aetherArtifact = TaskKey[AetherArtifact]("aether-artifact", "Main artifact")
