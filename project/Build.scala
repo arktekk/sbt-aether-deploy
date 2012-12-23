@@ -15,9 +15,8 @@ object Build extends sbt.Build {
       name := "aether-deploy", 
       libraryDependencies := deps,
       scalacOptions := Seq("-deprecation", "-unchecked"),
-      scalaVersion := "2.10.0-RC5",
-      scalaBinaryVersion <<= scalaVersion,
-      crossScalaVersions := Seq("2.10.0-RC5", "2.9.2"),
+      scalaVersion := "2.9.2",
+      crossScalaVersions := Seq("2.10.0", "2.9.2"),
       manifestSetting,
       publishSetting,
       sbtPlugin := true,
@@ -35,12 +34,7 @@ object Build extends sbt.Build {
 	  "org.apache.maven" % "maven-aether-provider" % mavenVersion,
 	  "org.sonatype.aether" % "aether-connector-wagon" % "1.13.1",
 	  "org.sonatype.aether" % "aether-connector-file" % "1.13.1",
-    "org.sonatype.aether" % "aether-connector-asynchttpclient" % "1.13.1"
-	  /*"org.apache.maven.wagon" % "wagon-provider-api" % wagonVersion,
-	  "org.sonatype.maven" % "wagon-ahc" % "1.2.1",
-	  "org.codehaus.plexus" % "plexus-utils" % "2.1",
-	  "org.apache.maven.wagon" % "wagon-ftp" % wagonVersion,
-	  "org.apache.maven.wagon" % "wagon-ssh" % wagonVersion*/
+      "org.sonatype.aether" % "aether-connector-asynchttpclient" % "1.13.1"
     )
   }
 
