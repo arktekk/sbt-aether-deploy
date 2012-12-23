@@ -73,7 +73,7 @@ object Aether extends sbt.Plugin {
     credentials.foreach(c => {
       r.setAuthentication(new Authentication(c.userName, c.passwd))
     })
-    r.setProxy(aether.Booter.SystemPropertyProxySelector.getProxy(repository))
+    r.setProxy(aether.Booter.SystemPropertyProxySelector.getProxy(r))
     r
   }
 
