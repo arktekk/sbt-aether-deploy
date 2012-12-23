@@ -43,7 +43,7 @@ object Booter {
   /*
    *  http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html
    */
-  private object SystemPropertyProxySelector extends DefaultProxySelector {
+  private[aether] object SystemPropertyProxySelector extends DefaultProxySelector {
     loadProxies().foreach( p => {
       add(p, Properties.envOrNone("http.nonProxyHosts").orNull)
     })
