@@ -42,3 +42,7 @@ This plugin should not yet be used for publishing sbt plugins. There are an expe
 # Usage if the publish task is overriden
 
 	sbt publish
+
+# Proxies
+
+Documentation for proxies can be found [here](http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html)
