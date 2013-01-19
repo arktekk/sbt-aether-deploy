@@ -23,12 +23,12 @@ object Aether extends sbt.Plugin {
 
   lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
 
-  lazy val defaultCoordinates = coordinates <<= (organization, name, version, scalaBinaryVersion, sbtPlugin).apply{
-    (o, n, v, scalaV, plugin) => {
+  lazy val defaultCoordinates = coordinates <<= (organization, name, version, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
+    (o, n, v, scalaV, crossPath, plugin) => {
       if (plugin) {
         sys.error("SBT is using maven incorrectly, meaning you will have to use sbt publish for sbt-plugins")
       }
-      val aId = "%s_%s".format(n, scalaV)
+      val aId = if (crossPath) "%s_%s".format(n, scalaV) else n
       MavenCoordinates(o, aId, v, None)
     }
   }
