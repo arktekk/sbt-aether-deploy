@@ -8,7 +8,7 @@ This plugin should not yet be used for publishing sbt plugins. There are an expe
 ## project/plugins.sbt
 
 	...
-	addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.7")
+	addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.8")
 	...
 
 
