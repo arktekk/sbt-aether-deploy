@@ -14,6 +14,8 @@ This plugin should not yet be used for publishing sbt plugins. There are an expe
 
 ## Build file
 	
+    import aether.Aether._
+    
     publishTo <<= (version: String) {
 		if (version.endsWith("SNAPSHOT") {
 			Some("Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
@@ -70,3 +72,10 @@ This should now allow aether-deploy task to work with the sbt-pgp-plugin
 ## Overriding the publish-signed task
 
    publishSigned <<= deploy
+   
+   
+## Using .scala file
+
+To use the plugin in a .scala file you have to import it like this:
+
+	import aether.Aether._
