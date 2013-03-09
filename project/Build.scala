@@ -34,7 +34,8 @@ object Build extends sbt.Build {
 	  "org.apache.maven" % "maven-aether-provider" % mavenVersion,
 	  "org.sonatype.aether" % "aether-connector-wagon" % "1.13.1",
 	  "org.sonatype.aether" % "aether-connector-file" % "1.13.1",
-      "org.sonatype.aether" % "aether-connector-asynchttpclient" % "1.13.1"
+      "org.sonatype.aether" % "aether-connector-asynchttpclient" % "1.13.1",
+      "ch.qos.logback" % "logback-classic" % "1.0.9"
     )
   }
 
