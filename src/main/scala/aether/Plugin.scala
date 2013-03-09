@@ -36,12 +36,8 @@ object Aether extends sbt.Plugin {
   lazy val defaultWagons = wagons := Seq.empty
   
   lazy val defaultArtifact = aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, packagedArtifacts in Compile) map {
-    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) => {
-      val subartifacts = artifacts.filterNot{case (a, f) => a.classifier == None && !a.extension.contains("asc")}
-      val actualSubArtifacts = AetherSubArtifact(pom, None, "pom") +: subartifacts.foldLeft(Vector[AetherSubArtifact]()){case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq}
-      val actualCoords = coords.copy(extension = getActualExtension(mainArtifact))
-      AetherArtifact(mainArtifact, actualCoords, actualSubArtifacts)
-    }
+    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
+      createArtifact(artifacts, pom, coords, mainArtifact)
   }
 
   lazy val deployTask = deploy <<= (publishTo, wagons, credentials, aetherArtifact, streams).map{
@@ -50,18 +46,28 @@ object Aether extends sbt.Plugin {
         case x: MavenRepository => x
         case _ => sys.error("The configured repo MUST be a maven repo")
       }.getOrElse(sys.error("There MUST be a configured publish repo"))
-      val maybeCred = scala.util.control.Exception.allCatch.opt(
-        URI.create(repository.root)
-      ).flatMap(href => {
+      val maybeCred = scala.util.control.Exception.allCatch.apply {
+        val href = URI.create(repository.root)
         val c = Credentials.forHost(cred, href.getHost)
         if (c.isEmpty) {
-          s.log.warn("No credentials supplied for %s".format(href.getHost))
+           s.log.warn("No credentials supplied for %s".format(href.getHost))
         }
         c
-      })
+      }
 
       deployIt(artifact, wag, repository, maybeCred)(s)
     }}
+
+  def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: sbt.File): AetherArtifact = {
+    val subartifacts = artifacts.filterNot {
+      case (a, f) => a.classifier == None && !a.extension.contains("asc")
+    }
+    val actualSubArtifacts = AetherSubArtifact(pom, None, "pom") +: subartifacts.foldLeft(Vector[AetherSubArtifact]()) {
+      case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq
+    }
+    val actualCoords = coords.copy(extension = getActualExtension(mainArtifact))
+    AetherArtifact(mainArtifact, actualCoords, actualSubArtifacts)
+  }
 
   private def getActualExtension(file: File) = {
     val name = file.getName
@@ -73,7 +79,7 @@ object Aether extends sbt.Plugin {
     credentials.foreach(c => {
       r.setAuthentication(new Authentication(c.userName, c.passwd))
     })
-    r.setProxy(aether.Booter.SystemPropertyProxySelector.getProxy(r))
+    r.setProxy(SystemPropertyProxySelector.getProxy(r))
     r
   }
 
