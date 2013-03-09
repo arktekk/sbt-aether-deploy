@@ -8,7 +8,7 @@ This plugin should not yet be used for publishing sbt plugins. There are an expe
 ## project/plugins.sbt
 
   ...
-  addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.8")
+  addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.9")
   ...
 
 
@@ -59,12 +59,8 @@ and this plugin does the same. This is no longer the case.
   seq(aetherSettings: _*)
 
   aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, signedArtifacts in Compile) map {
-    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) => {
-      val subartifacts = artifacts.filterNot{case (a, f) => a.classifier == None && !a.extension.contains("asc")}
-      val actualSubArtifacts = AetherSubArtifact(pom, None, "pom") +: subartifacts.foldLeft(Vector[AetherSubArtifact]()){case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq}
-      val actualCoords = coords.copy(extension = getActualExtension(mainArtifact))
-      AetherArtifact(mainArtifact, actualCoords, actualSubArtifacts)
-    }
+    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
+      createArtifact(artifacts, pom, coords, mainArtifact) 
   }
 
 This should now allow aether-deploy task to work with the sbt-pgp-plugin
@@ -74,7 +70,7 @@ This should now allow aether-deploy task to work with the sbt-pgp-plugin
   publishSigned <<= deploy
    
    
-## Using .scala file
+# Using .scala file
 
 To use the plugin in a .scala file you have to import it like this:
 
