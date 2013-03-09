@@ -60,7 +60,7 @@ and this plugin does the same. This is no longer the case.
 
   aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, signedArtifacts in Compile) map {
     (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
-      createArtifact(artifacts, pom, coords, mainArtifact) 
+      aether.Aether.createArtifact(artifacts, pom, coords, mainArtifact) 
   }
 
 This should now allow aether-deploy task to work with the sbt-pgp-plugin
