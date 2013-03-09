@@ -10,4 +10,4 @@ publishTo := Some("dav" at "dav://localhost:8008")
 
 seq(aetherPublishSettings: _*)
 
-wagons := Seq(aether.WagonWrapper("dav", new org.apache.maven.wagon.providers.webdav.WebDavWagon()))
+wagons := Seq(aether.WagonWrapper("dav", "org.apache.maven.wagon.providers.webdav.WebDavWagon"))

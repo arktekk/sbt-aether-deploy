@@ -4,7 +4,6 @@ import org.sonatype.aether.repository.LocalRepository
 import org.sonatype.aether.{RepositorySystemSession, RepositorySystem}
 import java.io.File
 import org.sonatype.aether.spi.connector.RepositoryConnectorFactory
-import org.apache.maven.wagon.Wagon
 import org.sonatype.aether.connector.wagon.{WagonConfigurator, WagonRepositoryConnectorFactory, WagonProvider}
 import org.sonatype.aether.connector.file.FileRepositoryConnectorFactory
 import org.apache.maven.repository.internal.{MavenServiceLocator, MavenRepositorySystemSession}
@@ -41,27 +40,5 @@ object Booter {
     session.setTransferListener(new ConsoleTransferListener(streams.log))
     session.setRepositoryListener(new ConsoleRepositoryListener(streams.log))
     session
-  }
-
-  private class ExtraWagonProvider(wagons: Seq[WagonWrapper]) extends WagonProvider {
-    private val map = wagons.map(w => w.scheme -> w.wagon).toMap
-
-    def lookup(roleHint: String): Wagon = {
-      map.get(roleHint).getOrElse(throw new IllegalArgumentException("Unknown wagon type"))
-    }
-
-    def release(wagon: Wagon) {
-      try {
-        if (wagon != null) wagon.disconnect()
-      }
-      catch {
-        case e: Exception => e.printStackTrace()
-      }
-    }
-  }
-
-  object NoOpWagonConfigurator extends WagonConfigurator {
-    def configure(wagon: Wagon, configuration: Any) {
-    }
   }
 }
