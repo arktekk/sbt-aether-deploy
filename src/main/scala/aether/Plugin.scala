@@ -5,6 +5,7 @@ import sbt.Keys._
 import java.util.Collections
 import org.sonatype.aether.util.artifact.{SubArtifact, DefaultArtifact}
 import org.sonatype.aether.deployment.DeployRequest
+import org.sonatype.aether.installation.InstallRequest
 import org.sonatype.aether.repository.{Authentication, RemoteRepository}
 import java.net.URI
 
@@ -13,15 +14,17 @@ object Aether extends sbt.Plugin {
   lazy val coordinates = SettingKey[MavenCoordinates]("aether-coordinates", "The maven coordinates to the main artifact. Should not be overridden")
   lazy val wagons = SettingKey[Seq[WagonWrapper]]("aether-wagons", "The configured extra maven wagon wrappers.")
   lazy val deploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
+  lazy val install = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
 
   lazy val aetherSettings: Seq[Setting[_]] = Seq(
     defaultWagons,
     defaultCoordinates,
     defaultArtifact,
-    deployTask
+    deployTask,
+    installTask
   )
 
-  lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
+  lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy, publishLocal <<= install.dependsOn(publishLocal))
 
   lazy val defaultCoordinates = coordinates <<= (organization, name, version, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
     (o, n, v, scalaV, crossPath, plugin) => {
@@ -56,6 +59,11 @@ object Aether extends sbt.Plugin {
       }
 
       deployIt(artifact, wag, repository, maybeCred)(s)
+    }}
+
+  lazy val installTask = install <<= (wagons, aetherArtifact, streams).map{
+    (wag: Seq[WagonWrapper], artifact: AetherArtifact, s: TaskStreams) => {
+      installIt(artifact, wag)(s)
     }}
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: sbt.File): AetherArtifact = {
@@ -94,6 +102,22 @@ object Aether extends sbt.Plugin {
 
     try {
       system.deploy(Booter.newSession, request)
+    }
+    catch {
+      case e: Exception => e.printStackTrace(); throw e
+    }
+  }
+
+  private def installIt(artifact: AetherArtifact, wagons: Seq[WagonWrapper])(implicit streams: TaskStreams) {
+    val request = new InstallRequest()
+    val parent = artifact.toArtifact
+    request.addArtifact(parent)
+    artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
+    implicit val system = Booter.newRepositorySystem(wagons)
+    implicit val localRepo = Path.userHome / ".m2" / "repository"
+
+    try {
+      system.install(Booter.newSession, request)
     }
     catch {
       case e: Exception => e.printStackTrace(); throw e

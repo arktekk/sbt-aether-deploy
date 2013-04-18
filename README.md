@@ -32,7 +32,7 @@ seq(aetherSettings: _*)
 ```
 
 
-## Override default publish task
+## Override default publish/publish-local task
 
 ```scala
 seq(aetherPublishSettings: _*)
@@ -47,11 +47,23 @@ credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
 
 # Usage
 
+To deploy to remote Maven repository.
+
     sbt aether-deploy
 
-# Usage if the publish task is overriden
+To deploy to local maven repository.
+
+    sbt aether-install
+
+# Usage if the publish/publish-local task is overriden
+
+To deploy to remote Maven repository.
 
     sbt publish
+
+To deploy to local maven repository.
+
+    sbt publish-local
 
 # Proxies
 
