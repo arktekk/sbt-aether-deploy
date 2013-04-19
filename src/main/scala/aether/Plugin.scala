@@ -24,7 +24,8 @@ object Aether extends sbt.Plugin {
     installTask
   )
 
-  lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy, publishLocal <<= install.dependsOn(publishLocal))
+  lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
+  lazy val aetherPublishLocalSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publishLocal <<= install.dependsOn(publishLocal))
 
   lazy val defaultCoordinates = coordinates <<= (organization, name, version, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
     (o, n, v, scalaV, crossPath, plugin) => {
@@ -61,9 +62,9 @@ object Aether extends sbt.Plugin {
       deployIt(artifact, wag, repository, maybeCred)(s)
     }}
 
-  lazy val installTask = install <<= (wagons, aetherArtifact, streams).map{
-    (wag: Seq[WagonWrapper], artifact: AetherArtifact, s: TaskStreams) => {
-      installIt(artifact, wag)(s)
+  lazy val installTask = install <<= (aetherArtifact, streams).map{
+    (artifact: AetherArtifact, s: TaskStreams) => {
+      installIt(artifact)(s)
     }}
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: sbt.File): AetherArtifact = {
@@ -108,12 +109,12 @@ object Aether extends sbt.Plugin {
     }
   }
 
-  private def installIt(artifact: AetherArtifact, wagons: Seq[WagonWrapper])(implicit streams: TaskStreams) {
+  private def installIt(artifact: AetherArtifact)(implicit streams: TaskStreams) {
     val request = new InstallRequest()
     val parent = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
-    implicit val system = Booter.newRepositorySystem(wagons)
+    implicit val system = Booter.newRepositorySystem(Nil)
     implicit val localRepo = Path.userHome / ".m2" / "repository"
 
     try {
