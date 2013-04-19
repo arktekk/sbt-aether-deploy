@@ -7,43 +7,51 @@ This plugin should not yet be used for publishing sbt plugins. There are an expe
 
 ## project/plugins.sbt
 
-  ...
-  addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.9")
-  ...
+```scala
+...
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.9")
+...
+```
 
 
 ## Build file
   
-  import aether.Aether._
-    
-  publishTo <<= (version: String) {
-    if (version.endsWith("SNAPSHOT") {
-      Some("Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
-    }
-    else {
-      Some("Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
-    }
+```scala
+import aether.Aether._
+  
+publishTo <<= (version: String) {
+  if (version.endsWith("SNAPSHOT") {
+    Some("Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
   }
+  else {
+    Some("Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+  }
+}
 
-  seq(aetherSettings: _*)
+seq(aetherSettings: _*)
+```
 
 
 ## Override default publish task
 
-  seq(aetherPublishSettings: _*)
+```scala
+seq(aetherPublishSettings: _*)
+```
 
 
 ## Add credentials
 
-  credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
+```scala
+credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
+```
 
 # Usage
 
-  sbt aether-deploy
+    sbt aether-deploy
 
 # Usage if the publish task is overriden
 
-  sbt publish
+    sbt publish
 
 # Proxies
 
@@ -56,22 +64,27 @@ and this plugin does the same. This is no longer the case.
 
 ## Workaround until code is updated
 
-  seq(aetherSettings: _*)
+```scala
+seq(aetherSettings: _*)
 
-  aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, signedArtifacts in Compile) map {
-    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
-      aether.Aether.createArtifact(artifacts, pom, coords, mainArtifact) 
-  }
+aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, signedArtifacts in Compile) map {
+  (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
+    aether.Aether.createArtifact(artifacts, pom, coords, mainArtifact) 
+}
+```
 
 This should now allow aether-deploy task to work with the sbt-pgp-plugin
 
 ## Overriding the publish-signed task
 
-  publishSigned <<= deploy
-   
+```scala
+publishSigned <<= deploy
+```
    
 # Using .scala file
 
 To use the plugin in a .scala file you have to import it like this:
 
-  import aether.Aether._
+```scala
+import aether.Aether._
+```
