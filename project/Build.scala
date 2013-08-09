@@ -4,13 +4,11 @@ import Keys._
 object Build extends sbt.Build {
   import Dependencies._
 	
-  lazy val buildSettings = Defaults.defaultSettings ++ Seq(
-	organization := "no.arktekk.sbt"
-  )
   lazy val root = Project(
     id = "sbt-aether-deploy",
     base = file("."),
-    settings = buildSettings ++ Seq(
+    settings =  Defaults.defaultSettings ++ Seq(
+      organization := "no.arktekk.sbt",
       description := "Deploy in SBT using Sonatype Aether",
       name := "aether-deploy", 
       libraryDependencies := deps,
@@ -21,8 +19,7 @@ object Build extends sbt.Build {
       publishSetting,
       sbtPlugin := true,
       credentials += Credentials(Path.userHome / ".sbt" / "arktekk-credentials"),
-	  pomIncludeRepository := { x => false }
-
+	    pomIncludeRepository := { x => false }
     ) ++ mavenCentralFrouFrou ++ ScriptedPlugin.scriptedSettings
   )
 
@@ -31,11 +28,14 @@ object Build extends sbt.Build {
 	val mavenVersion = "3.0.4"
 	
 	val deps = Seq(
-	  "org.apache.maven" % "maven-aether-provider" % mavenVersion,
-	  "org.sonatype.aether" % "aether-connector-wagon" % "1.13.1",
-	  "org.sonatype.aether" % "aether-connector-file" % "1.13.1",
-      "org.sonatype.aether" % "aether-connector-asynchttpclient" % "1.13.1",
-      "ch.qos.logback" % "logback-classic" % "1.0.9"
+	    //"org.apache.maven" % "maven-aether-provider" % mavenVersion,
+      "org.glassfish.hk2.external" % "javax.inject" % "2.2.0-b14" % "provided",
+      "org.codehaus.plexus" % "plexus-component-annotations" % "1.5.5" % "provided",
+      "org.eclipse.aether" % "aether-impl" % "0.9.0.M3",
+      "org.eclipse.aether" % "aether-transport-http" % "0.9.0.M3",
+      "org.eclipse.aether" % "aether-transport-file" % "0.9.0.M3",
+      "org.eclipse.aether" % "aether-transport-wagon" % "0.9.0.M3",
+      "ch.qos.logback" % "logback-classic" % "1.0.13"
     )
   }
 

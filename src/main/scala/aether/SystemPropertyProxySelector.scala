@@ -1,15 +1,15 @@
 package aether
 
-import org.sonatype.aether.util.repository.DefaultProxySelector
+import org.eclipse.aether.util.repository.DefaultProxySelector
 import util.Properties
-import org.sonatype.aether.repository.{Authentication, Proxy => AProxy}
+import org.eclipse.aether.repository.{Authentication, Proxy => AProxy}
 import java.net.URI
 
 /*
  *  http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html
  */
-private[aether] object SystemPropertyProxySelector extends DefaultProxySelector {
-  loadProxies().foreach( p => {
+private[aether] object SystemPropertyProxySelector {
+  /*loadProxies().foreach( p => {
     add(p, Properties.envOrNone("http.nonProxyHosts").orNull)
   })
 
@@ -18,7 +18,7 @@ private[aether] object SystemPropertyProxySelector extends DefaultProxySelector 
    * @return
    */
   private def loadProxies(): Option[AProxy] = {
-    val env = Properties.envOrNone("http_proxy").map(URI.create(_)).map(uri => {
+    val env = Properties.envOrNone("http_proxy").map(URI.create).map(uri => {
       val port = uri.getScheme -> uri.getPort match {
         case ("http", -1) => 80
         case ("https", -1) => 443
@@ -30,11 +30,11 @@ private[aether] object SystemPropertyProxySelector extends DefaultProxySelector 
     val https = Properties.propOrNone("https.proxyHost").map(host => new AProxy("https", host, Properties.propOrElse("https.proxyPort", "443").toInt, null))
 
     val auth = (Properties.propOrNone("http.proxyUser") -> Properties.propOrNone("http.proxyPassword")) match {
-      case (Some(u), Some(p)) => new Authentication(u, p)
+      case (Some(u), Some(p)) => new StringAuthentication(u, p)
       case _ => null
     }
 
     env.orElse(http).orElse(https).map(u => u.setAuthentication(auth))
   }
-
+*/
 }

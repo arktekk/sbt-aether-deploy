@@ -1,6 +1,6 @@
 package aether
 
-import org.sonatype.aether.{RepositoryEvent, AbstractRepositoryListener}
+import org.eclipse.aether.{RepositoryEvent, AbstractRepositoryListener}
 import sbt.Logger
 
 class ConsoleRepositoryListener(out: Logger) extends AbstractRepositoryListener {

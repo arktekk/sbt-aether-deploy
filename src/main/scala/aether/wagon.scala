@@ -1,7 +1,7 @@
 package aether
 
 import org.apache.maven.wagon.Wagon
-import org.sonatype.aether.connector.wagon.{WagonConfigurator, WagonProvider}
+import org.eclipse.aether.transport.wagon.{WagonConfigurator, WagonProvider}
 
 /**
  * @author Erlend Hamnaberg<erlend@hamnaberg.net>

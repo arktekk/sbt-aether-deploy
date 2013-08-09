@@ -1,7 +1,7 @@
 package aether
 
 import java.util.concurrent.ConcurrentHashMap
-import org.sonatype.aether.transfer.{TransferEvent, AbstractTransferListener, TransferResource}
+import org.eclipse.aether.transfer.{TransferEvent, AbstractTransferListener, TransferResource}
 import java.text.{DecimalFormatSymbols, DecimalFormat}
 import java.util.Locale
 import sbt.Logger
