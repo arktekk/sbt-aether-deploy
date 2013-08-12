@@ -5,13 +5,13 @@ import org.eclipse.aether.{DefaultRepositorySystemSession, RepositorySystemSessi
 import java.io.File
 import org.eclipse.aether.transport.wagon.{WagonTransporterFactory, WagonConfigurator, WagonProvider}
 import org.eclipse.aether.transport.file.FileTransporterFactory
-import org.eclipse.aether.impl.{ArtifactDescriptorReader, VersionRangeResolver, VersionResolver, DefaultServiceLocator}
+import org.eclipse.aether.impl._
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory
 
 import sbt.std.TaskStreams
-import org.apache.maven.repository.internal.{DefaultArtifactDescriptorReader, DefaultVersionRangeResolver, DefaultVersionResolver}
+import org.apache.maven.repository.internal._
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 
 object Booter {
@@ -24,6 +24,8 @@ object Booter {
     locator.addService(classOf[VersionRangeResolver], classOf[DefaultVersionRangeResolver])
     locator.addService(classOf[ArtifactDescriptorReader], classOf[DefaultArtifactDescriptorReader])
     locator.addService(classOf[RepositoryConnectorFactory], classOf[org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory])
+    locator.addService(classOf[MetadataGeneratorFactory], classOf[SnapshotMetadataGeneratorFactory])
+    locator.addService(classOf[MetadataGeneratorFactory], classOf[VersionsMetadataGeneratorFactory])
 
     addTransporterFactories(locator)
 

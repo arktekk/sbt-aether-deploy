@@ -30,6 +30,7 @@ object Build extends sbt.Build {
     val deps = Seq(
         "org.apache.maven" % "maven-aether-provider" % mavenVersion intransitive(),
         "org.apache.maven" % "maven-model-builder" % mavenVersion intransitive(),
+        "org.apache.maven" % "maven-repository-metadata" % mavenVersion intransitive(),
         "org.codehaus.plexus" % "plexus-interpolation" % "1.19" intransitive(),
         "org.apache.maven" % "maven-model" % mavenVersion,
         "org.glassfish.hk2.external" % "javax.inject" % "2.2.0-b14" % "provided",
