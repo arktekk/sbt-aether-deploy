@@ -2,14 +2,11 @@
 Deploys sbt-artifacts using Sonatype aether. 
 Aether is the same library as maven itself uses, meaning that the same behaviour should be expected.
 
-## Caveat 
-This plugin should not yet be used for publishing sbt plugins. There are an experimental branch for making this work.
-
 ## project/plugins.sbt
 
 ```scala
 ...
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.9")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.10")
 ...
 ```
 
