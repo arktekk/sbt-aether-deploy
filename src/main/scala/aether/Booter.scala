@@ -15,7 +15,7 @@ import org.apache.maven.repository.internal._
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 
 object Booter {
-  def newRepositorySystem(wagons: Seq[WagonWrapper]): RepositorySystem = {
+  def newRepositorySystem(wagons: Seq[WagonWrapper], plugin: Boolean): RepositorySystem = {
     val locator = new DefaultServiceLocator()
     locator.addService(classOf[RepositoryLayoutFactory], classOf[SbtPluginLayoutFactory])
     locator.setServices(classOf[WagonProvider], new ExtraWagonProvider(wagons))
@@ -24,8 +24,10 @@ object Booter {
     locator.addService(classOf[VersionRangeResolver], classOf[DefaultVersionRangeResolver])
     locator.addService(classOf[ArtifactDescriptorReader], classOf[DefaultArtifactDescriptorReader])
     locator.addService(classOf[RepositoryConnectorFactory], classOf[org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory])
-    locator.addService(classOf[MetadataGeneratorFactory], classOf[SnapshotMetadataGeneratorFactory])
-    locator.addService(classOf[MetadataGeneratorFactory], classOf[VersionsMetadataGeneratorFactory])
+    if (!plugin) {
+      locator.addService(classOf[MetadataGeneratorFactory], classOf[SnapshotMetadataGeneratorFactory])
+      locator.addService(classOf[MetadataGeneratorFactory], classOf[VersionsMetadataGeneratorFactory])
+    }
 
     addTransporterFactories(locator)
 

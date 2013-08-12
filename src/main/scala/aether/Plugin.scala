@@ -2,7 +2,6 @@ package aether
 
 import sbt._
 import Keys._
-import java.util.Collections
 import org.eclipse.aether.util.artifact.SubArtifact
 import org.eclipse.aether.artifact.DefaultArtifact
 import org.eclipse.aether.deployment.DeployRequest
@@ -31,12 +30,9 @@ object Aether extends sbt.Plugin {
 
   lazy val defaultCoordinates = coordinates <<= (organization, name, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
     (o, n, v, sbtV, scalaV, crossPath, plugin) => {
-      val artifactId = if (plugin) {
-        sys.error("Fix me!")
-      } else {
-        if (crossPath) "%s_%s".format(n, scalaV) else n
-      }
-      MavenCoordinates(o, artifactId, v, None)
+      val artifactId = if (crossPath && !plugin) "%s_%s".format(n, scalaV) else n
+      val coords = MavenCoordinates(o, artifactId, v, None)
+      if (plugin) coords.withSbtVersion(sbtV).withScalaVersion(scalaV) else coords
     }
   }
 
@@ -65,9 +61,9 @@ object Aether extends sbt.Plugin {
       deployIt(artifact, plugin, wag, repository, maybeCred)(s)
     }}
 
-  lazy val installTask = install <<= (aetherArtifact, streams).map{
-    (artifact: AetherArtifact, s: TaskStreams) => {
-      installIt(artifact)(s)
+  lazy val installTask = install <<= (aetherArtifact, streams, sbtPlugin).map{
+    (artifact: AetherArtifact, s: TaskStreams, plugin: Boolean) => {
+      installIt(artifact, plugin)(s)
     }}
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: sbt.File): AetherArtifact = {
@@ -91,7 +87,7 @@ object Aether extends sbt.Plugin {
   }
 
   private def deployIt(artifact: AetherArtifact, plugin: Boolean, wagons: Seq[WagonWrapper], repo: MavenRepository, credentials: Option[DirectCredentials])(implicit streams: TaskStreams) {
-    implicit val system = Booter.newRepositorySystem(wagons)
+    implicit val system = Booter.newRepositorySystem(wagons, plugin)
     implicit val localRepo = Path.userHome / ".m2" / "repository"
 
     val request = new DeployRequest()
@@ -108,8 +104,8 @@ object Aether extends sbt.Plugin {
     }
   }
 
-  private def installIt(artifact: AetherArtifact)(implicit streams: TaskStreams) {
-    implicit val system = Booter.newRepositorySystem(Nil)
+  private def installIt(artifact: AetherArtifact, plugin: Boolean)(implicit streams: TaskStreams) {
+    implicit val system = Booter.newRepositorySystem(Nil, plugin)
     implicit val localRepo = Path.userHome / ".m2" / "repository"
 
     val request = new InstallRequest()
@@ -127,11 +123,19 @@ object Aether extends sbt.Plugin {
   }
 }
 
-case class MavenCoordinates(groupId: String, artifactId: String, version: String, classifier: Option[String], extension: String = "jar") {
+case class MavenCoordinates(groupId: String, artifactId: String, version: String, classifier: Option[String], extension: String = "jar", props: Map[String, String] = Map.empty) {
   def coordinates = "%s:%s:%s%s:%s".format(groupId, artifactId, extension, classifier.map(_ + ":").getOrElse(""), version)
+
+  def withScalaVersion(v: String) = withProp(MavenCoordinates.ScalaVersion, v)
+  def withSbtVersion(v: String) = withProp(MavenCoordinates.SbtVersion, v)
+
+  def withProp(name: String, value: String) = copy(props = props.updated(name, value))
 }
 
 object MavenCoordinates {
+  val ScalaVersion = "scala-version"
+  val SbtVersion = "sbt-version"
+
   def apply(coords: String): Option[MavenCoordinates] = coords.split(":") match {
     case Array(groupId, artifactId, extension, v) =>
       Some(MavenCoordinates(groupId, artifactId, v, None, extension))
@@ -144,17 +148,20 @@ object MavenCoordinates {
 }
 
 case class AetherSubArtifact(file: File, classifier: Option[String] = None, extension: String = "jar") {
-  def toArtifact(parent: DefaultArtifact) = new SubArtifact(parent, classifier.orNull, extension, file)
+  def toArtifact(parent: DefaultArtifact) = new SubArtifact(parent, classifier.orNull, extension, parent.getProperties, file)
 }
 
 case class AetherArtifact(file: File, coordinates: MavenCoordinates, subartifacts: Seq[AetherSubArtifact] = Nil) {
+  def isSbtPlugin = coordinates.props.contains(MavenCoordinates.SbtVersion)
+
+  import collection.JavaConverters._
   def toArtifact = new DefaultArtifact(
     coordinates.groupId,
     coordinates.artifactId,
     coordinates.classifier.orNull,
     coordinates.extension,
     coordinates.version,
-    Collections.emptyMap[String, String](),
+    coordinates.props.asJava,
     file
   )
 }
