@@ -1,6 +1,6 @@
 package aether
 
-import org.eclipse.aether.repository.LocalRepository
+import org.eclipse.aether.repository.{ProxySelector, LocalRepository}
 import org.eclipse.aether.{DefaultRepositorySystemSession, RepositorySystemSession, RepositorySystem}
 import java.io.File
 import org.eclipse.aether.transport.wagon.{WagonTransporterFactory, WagonConfigurator, WagonProvider}
@@ -24,6 +24,7 @@ object Booter {
     locator.addService(classOf[VersionRangeResolver], classOf[DefaultVersionRangeResolver])
     locator.addService(classOf[ArtifactDescriptorReader], classOf[DefaultArtifactDescriptorReader])
     locator.addService(classOf[RepositoryConnectorFactory], classOf[org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory])
+    locator.setServices(classOf[ProxySelector], SystemPropertyProxySelector())
     if (!plugin) {
       locator.addService(classOf[MetadataGeneratorFactory], classOf[SnapshotMetadataGeneratorFactory])
       locator.addService(classOf[MetadataGeneratorFactory], classOf[VersionsMetadataGeneratorFactory])

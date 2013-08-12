@@ -6,9 +6,10 @@ import org.eclipse.aether.util.artifact.SubArtifact
 import org.eclipse.aether.artifact.DefaultArtifact
 import org.eclipse.aether.deployment.DeployRequest
 import org.eclipse.aether.installation.InstallRequest
-import org.eclipse.aether.repository.{Authentication, RemoteRepository}
+import org.eclipse.aether.repository.{Proxy, RemoteRepository}
 import java.net.URI
 import org.eclipse.aether.repository.RemoteRepository.Builder
+import org.eclipse.aether.util.repository.AuthenticationBuilder
 
 object Aether extends sbt.Plugin {
   lazy val aetherArtifact = TaskKey[AetherArtifact]("aether-artifact", "Main artifact")
@@ -83,7 +84,11 @@ object Aether extends sbt.Plugin {
   }
     
   private def toRepository(repo: MavenRepository, plugin: Boolean, credentials: Option[DirectCredentials]): RemoteRepository = {
-    new Builder(repo.name, if (plugin) "sbt-plugin" else "default", repo.root).build()
+    val builder: Builder = new Builder(repo.name, if (plugin) "sbt-plugin" else "default", repo.root)
+    credentials.foreach{c => builder.setAuthentication(new AuthenticationBuilder().addUsername(c.userName).addPassword(c.passwd).build()) }
+    val proxy: Option[Proxy] = Option(SystemPropertyProxySelector.selector.getProxy(builder.build()))
+    proxy.foreach(p => builder.setProxy(p))
+    builder.build()
   }
 
   private def deployIt(artifact: AetherArtifact, plugin: Boolean, wagons: Seq[WagonWrapper], repo: MavenRepository, credentials: Option[DirectCredentials])(implicit streams: TaskStreams) {
