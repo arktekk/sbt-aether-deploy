@@ -1,4 +1,4 @@
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.10-SNAPSHOT")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.11-SNAPSHOT")
 
 resolvers += Resolver.url("scalasbt", new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
 
