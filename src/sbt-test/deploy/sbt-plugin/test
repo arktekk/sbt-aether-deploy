@@ -1,0 +1,8 @@
+# Deploy to file url
+> publish
+$ exists target/repo/sbt-plugin
+$ exists target/repo/sbt-plugin/sbt-plugin_2.9.2_0.12/0.1/
+$ exists target/repo/sbt-plugin/sbt-plugin_2.9.2_0.12/0.1/sbt-plugin-0.1.jar
+$ exists target/repo/sbt-plugin/sbt-plugin_2.9.2_0.12/0.1/sbt-plugin-0.1.pom
+$ exists target/repo/sbt-plugin/sbt-plugin_2.9.2_0.12/0.1/sbt-plugin-0.1-sources.jar
+$ exists target/repo/sbt-plugin/sbt-plugin_2.9.2_0.12/0.1/sbt-plugin-0.1-javadoc.jar
