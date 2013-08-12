@@ -27,7 +27,7 @@ object Aether extends sbt.Plugin {
   )
 
   lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
-  //lazy val aetherPublishLocalSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publishLocal <<= install.dependsOn(publishLocal))
+  lazy val aetherPublishLocalSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publishLocal <<= install.dependsOn(publishLocal))
 
   lazy val defaultCoordinates = coordinates <<= (organization, name, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
     (o, n, v, sbtV, scalaV, crossPath, plugin) => {
@@ -86,8 +86,8 @@ object Aether extends sbt.Plugin {
     name.substring(name.lastIndexOf('.') + 1)
   }
     
-  private def toRepository(repo: MavenRepository, credentials: Option[DirectCredentials]): RemoteRepository = {
-    new Builder(repo.name, "default", repo.root).build()
+  private def toRepository(repo: MavenRepository, plugin: Boolean, credentials: Option[DirectCredentials]): RemoteRepository = {
+    new Builder(repo.name, if (plugin) "sbt-plugin" else "default", repo.root).build()
   }
 
   private def deployIt(artifact: AetherArtifact, plugin: Boolean, wagons: Seq[WagonWrapper], repo: MavenRepository, credentials: Option[DirectCredentials])(implicit streams: TaskStreams) {
@@ -95,7 +95,7 @@ object Aether extends sbt.Plugin {
     implicit val localRepo = Path.userHome / ".m2" / "repository"
 
     val request = new DeployRequest()
-    request.setRepository(toRepository(repo, credentials))
+    request.setRepository(toRepository(repo, plugin, credentials))
     val parent = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))

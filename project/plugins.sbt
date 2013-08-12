@@ -1,5 +1,5 @@
 
-libraryDependencies <+= (sbtVersion) { sv => "org.scala-sbt" % "scripted-plugin" % sv }
+libraryDependencies <+= sbtVersion("org.scala-sbt" % "scripted-plugin" % _)
 
 addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.5.1")
 

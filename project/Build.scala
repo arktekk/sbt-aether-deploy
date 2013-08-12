@@ -24,19 +24,23 @@ object Build extends sbt.Build {
   )
 
   object Dependencies {
-	val wagonVersion = "2.2"
-	val mavenVersion = "3.0.4"
-	
-	val deps = Seq(
-	    //"org.apache.maven" % "maven-aether-provider" % mavenVersion,
-      "org.glassfish.hk2.external" % "javax.inject" % "2.2.0-b14" % "provided",
-      "org.codehaus.plexus" % "plexus-component-annotations" % "1.5.5" % "provided",
-      "org.eclipse.aether" % "aether-impl" % "0.9.0.M3",
-      "org.eclipse.aether" % "aether-transport-http" % "0.9.0.M3",
-      "org.eclipse.aether" % "aether-transport-file" % "0.9.0.M3",
-      "org.eclipse.aether" % "aether-transport-wagon" % "0.9.0.M3",
-      "ch.qos.logback" % "logback-classic" % "1.0.13"
-    )
+    val mavenVersion = "3.1.0"
+    val aetherVersion: String = "0.9.0.M3"
+
+    val deps = Seq(
+        "org.apache.maven" % "maven-aether-provider" % mavenVersion intransitive(),
+        "org.apache.maven" % "maven-model-builder" % mavenVersion intransitive(),
+        "org.codehaus.plexus" % "plexus-interpolation" % "1.19" intransitive(),
+        "org.apache.maven" % "maven-model" % mavenVersion,
+        "org.glassfish.hk2.external" % "javax.inject" % "2.2.0-b14" % "provided",
+        "org.codehaus.plexus" % "plexus-component-annotations" % "1.5.5" % "provided",
+        "org.eclipse.aether" % "aether-impl" % aetherVersion,
+        "org.eclipse.aether" % "aether-connector-basic" % aetherVersion,
+        "org.eclipse.aether" % "aether-transport-http" % aetherVersion,
+        "org.eclipse.aether" % "aether-transport-file" % aetherVersion,
+        "org.eclipse.aether" % "aether-transport-wagon" % aetherVersion,
+        "ch.qos.logback" % "logback-classic" % "1.0.13"
+      )
   }
 
   object Resolvers {
