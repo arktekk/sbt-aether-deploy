@@ -6,7 +6,7 @@ organization := "webdav"
 
 scalaVersion := "2.9.1"
 
-publishTo := Some("dav" at "dav://localhost:8008")
+publishTo := Some("dav" at "dav://localhost:8009")
 
 seq(aetherPublishSettings: _*)
 
