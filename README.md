@@ -76,9 +76,9 @@ and this plugin does the same. This is no longer the case.
 ```scala
 seq(aetherSettings: _*)
 
-aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, signedArtifacts in Compile) map {
-  (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
-    aether.Aether.createArtifact(artifacts, pom, coords, mainArtifact) 
+aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, com.typesafe.sbt.pgp.PgpKeys.signedArtifacts in Compile) map {
+  (coords: aether.MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
+    aether.Aether.createArtifact(artifacts, pom, coords, mainArtifact)
 }
 ```
 
