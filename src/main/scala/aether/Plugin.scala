@@ -19,9 +19,9 @@ object Aether extends sbt.Plugin {
   lazy val install = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
 
   lazy val aetherSettings: Seq[Setting[_]] = Seq(
-    defaultWagons,
+    wagons := Seq.empty,
     defaultCoordinates,
-    defaultArtifact,
+    if (isPgpAvailable) signedArtifact else defaultArtifact,
     deployTask,
     installTask
   )
@@ -37,9 +37,12 @@ object Aether extends sbt.Plugin {
     }
   }
 
-  lazy val defaultWagons = wagons := Seq.empty
-  
   lazy val defaultArtifact = aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, packagedArtifacts in Compile) map {
+    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
+      createArtifact(artifacts, pom, coords, mainArtifact)
+  }
+
+  lazy val signedArtifact = aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, com.typesafe.sbt.pgp.PgpKeys.signedArtifacts in Compile) map {
     (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
       createArtifact(artifacts, pom, coords, mainArtifact)
   }
@@ -82,7 +85,9 @@ object Aether extends sbt.Plugin {
     val name = file.getName
     name.substring(name.lastIndexOf('.') + 1)
   }
-    
+
+  private def isPgpAvailable = util.control.Exception.allCatch.opt(Class.forName("com.typesafe.sbt.pgp.PgpSigner")).isDefined
+
   private def toRepository(repo: MavenRepository, plugin: Boolean, credentials: Option[DirectCredentials]): RemoteRepository = {
     val builder: Builder = new Builder(repo.name, if (plugin) "sbt-plugin" else "default", repo.root)
     credentials.foreach{c => builder.setAuthentication(new AuthenticationBuilder().addUsername(c.userName).addPassword(c.passwd).build()) }
