@@ -12,7 +12,20 @@ private[aether] object SystemPropertyProxySelector {
   lazy val selector = {
     val selector = new DefaultProxySelector
     loadProxies().foreach( p => {
-      selector.add(p, envOrProp("http.nonProxyHosts").orNull)
+      val nonProxyHosts = envOrProp("http.nonProxyHosts")
+      // SBT doesn't set the http.nonProxyHosts property, so we'll
+      // have to do it.
+      // no_proxy is one the form "example.com,.example.org" which is
+      // equivalient Java's to "example.com|*.example.org"
+      val no_proxy = envOrProp("no_proxy").map(np => {
+        np.split(",").map(p => {
+          if(p.startsWith("."))
+            "*." + p.substring(1)
+          else
+            p
+        }).mkString("|")
+      })
+      selector.add(p, nonProxyHosts.orElse(no_proxy).orNull)
     })
     selector
   }
@@ -21,7 +34,9 @@ private[aether] object SystemPropertyProxySelector {
 
 
   /**
-   * java -Dhttp.proxyHost=myproxy -Dhttp.proxyPort=8080 -Dhttp.proxyUser=username -Dhttp.proxyPassword=mypassword
+   * java -Dhttp.proxyHost=myproxy -Dhttp.proxyPort=8080 \
+   *      -Dhttp.proxyUser=username -Dhttp.proxyPassword=mypassword \
+   *      -Dhttp.nonProxyHosts=
    * @return
    */
   private def loadProxies(): Option[AProxy] = {
