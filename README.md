@@ -1,5 +1,5 @@
 # SBT aether deploy plugin
-Deploys sbt-artifacts using Sonatype aether. 
+Deploys sbt-artifacts using Eclipse aether. 
 Aether is the same library as maven itself uses, meaning that the same behaviour should be expected.
 
 ## project/plugins.sbt
