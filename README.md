@@ -17,10 +17,9 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.10")
 import aether.Aether._
   
 publishTo <<= (version: String) {
-  if (version.endsWith("SNAPSHOT") {
+  if (version.endsWith("SNAPSHOT")) {
     Some("Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
-  }
-  else {
+  } else {
     Some("Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
   }
 }
