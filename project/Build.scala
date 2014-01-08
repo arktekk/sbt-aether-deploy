@@ -11,15 +11,16 @@ object Build extends sbt.Build {
       organization := "no.arktekk.sbt",
       description := "Deploy in SBT using Sonatype Aether",
       name := "aether-deploy", 
-      libraryDependencies := deps,
+      libraryDependencies ++= deps,
       scalacOptions := Seq("-deprecation", "-unchecked"),
       manifestSetting,
       publishSetting,
       sbtPlugin := true,
       credentials += Credentials(Path.userHome / ".sbt" / "arktekk-credentials"),
-	    pomIncludeRepository := { x => false }
+	    pomIncludeRepository := { x => false },
+      CrossBuilding.crossSbtVersions := Seq("0.13", "0.12")
     ) ++ mavenCentralFrouFrou ++ ScriptedPlugin.scriptedSettings
-  )
+  ).settings(net.virtualvoid.sbt.cross.CrossPlugin.crossBuildingSettings: _*)
 
   object Dependencies {
     val mavenVersion = "3.1.1"
