@@ -15,7 +15,7 @@ import org.apache.maven.repository.internal._
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 
 object Booter {
-  def newRepositorySystem(wagons: Seq[WagonWrapper], plugin: Boolean): RepositorySystem = {
+  private def newRepositorySystem(wagons: Seq[WagonWrapper], plugin: Boolean): RepositorySystem = {
     val locator = new DefaultServiceLocator()
     locator.addService(classOf[RepositoryLayoutFactory], classOf[SbtPluginLayoutFactory])
     locator.setServices(classOf[WagonProvider], new ExtraWagonProvider(wagons))
@@ -44,17 +44,21 @@ object Booter {
     system
   }
 
-  def newSession(implicit system: RepositorySystem, localRepoDir: File, streams: TaskStreams[_]): RepositorySystemSession = {
+  def apply(localRepoDir: File, streams: TaskStreams[_], wagons: Seq[WagonWrapper] = Nil, plugin: Boolean = false): (RepositorySystem, RepositorySystemSession) = {
+    val system = newRepositorySystem(wagons, plugin)
+    system -> newSession(system, localRepoDir, streams)
+  }
+
+  private def newSession(implicit system: RepositorySystem, localRepoDir: File, streams: TaskStreams[_]): RepositorySystemSession = {
     val session = new DefaultRepositorySystemSession()
     val localRepo = new LocalRepository(localRepoDir)
-   // session.setProxySelector(SystemPropertyProxySelector)
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo))
     session.setTransferListener(new ConsoleTransferListener(streams.log))
     session.setRepositoryListener(new ConsoleRepositoryListener(streams.log))
     session
   }
 
-  def addTransporterFactories(locator: DefaultServiceLocator) {
+  private def addTransporterFactories(locator: DefaultServiceLocator) {
     val wagonRepositoryConnectorFactory = new WagonTransporterFactory()
     wagonRepositoryConnectorFactory.setPriority(1000)
     val httpTransporterFactory = new HttpTransporterFactory()

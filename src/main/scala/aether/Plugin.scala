@@ -17,17 +17,22 @@ object Aether extends sbt.Plugin {
   lazy val wagons = SettingKey[Seq[WagonWrapper]]("aether-wagons", "The configured extra maven wagon wrappers.")
   lazy val deploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
   lazy val install = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
+  lazy val aetherLocalRepo = SettingKey[File]("aether-localrepo", "Local maven repository.")
 
   lazy val aetherSettings: Seq[Setting[_]] = Seq(
     defaultWagons,
     defaultCoordinates,
     defaultArtifact,
+    defaultLocalRepo,
     deployTask,
     installTask
   )
 
   lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
   lazy val aetherPublishLocalSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publishLocal <<= install.dependsOn(publishLocal))
+  lazy val aetherPublishBothSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy, publishLocal <<= install.dependsOn(publishLocal))
+
+  lazy val defaultLocalRepo = aetherLocalRepo := Path.userHome / ".m2" / "repository"
 
   lazy val defaultCoordinates = coordinates <<= (organization, name, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
     (o, n, v, sbtV, scalaV, crossPath, plugin) => {
@@ -44,14 +49,14 @@ object Aether extends sbt.Plugin {
       createArtifact(artifacts, pom, coords, mainArtifact)
   }
 
-  lazy val deployTask = deploy <<= (publishTo, sbtPlugin, wagons, credentials, aetherArtifact, streams).map{
-    (repo: Option[Resolver], plugin: Boolean, wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams) => {
-      deployIt(repo, artifact, plugin, wag, cred)(s)
+  lazy val deployTask = deploy <<= (publishTo, sbtPlugin, wagons, credentials, aetherArtifact, streams, aetherLocalRepo).map{
+    (repo: Option[Resolver], plugin: Boolean, wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams, localR: File) => {
+      deployIt(repo, localR, artifact, plugin, wag, cred)(s)
     }}
 
-  lazy val installTask = install <<= (aetherArtifact, streams, sbtPlugin).map{
-    (artifact: AetherArtifact, s: TaskStreams, plugin: Boolean) => {
-      installIt(artifact, plugin)(s)
+  lazy val installTask = install <<= (aetherArtifact, aetherLocalRepo, streams, sbtPlugin).map{
+    (artifact: AetherArtifact, localR: File, s: TaskStreams, plugin: Boolean) => {
+      installIt(artifact, localR, plugin)(s)
     }}
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: sbt.File): AetherArtifact = {
@@ -78,10 +83,7 @@ object Aether extends sbt.Plugin {
     builder.build()
   }
 
-  def deployIt(repo: Option[Resolver], artifact: AetherArtifact, plugin: Boolean, wagons: Seq[WagonWrapper], cred: Seq[Credentials])(implicit s: TaskStreams) {
-    implicit val system = Booter.newRepositorySystem(wagons, plugin)
-    implicit val localRepo = Path.userHome / ".m2" / "repository"
-
+  def deployIt(repo: Option[Resolver], localRepo: File, artifact: AetherArtifact, plugin: Boolean, wagons: Seq[WagonWrapper], cred: Seq[Credentials])(implicit s: TaskStreams) {
     val repository = repo.collect{
       case x: MavenRepository => x
       case x => sys.error("The configured repo MUST be a maven repo, but was: " + x)
@@ -103,25 +105,24 @@ object Aether extends sbt.Plugin {
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
     try {
-      system.deploy(Booter.newSession, request)
+      val (system, session) = Booter(localRepo, s, wagons, plugin)
+      system.deploy(session, request)
     }
     catch {
       case e: Exception => e.printStackTrace(); throw e
     }
   }
 
-  def installIt(artifact: AetherArtifact, plugin: Boolean)(implicit streams: TaskStreams) {
-    implicit val system = Booter.newRepositorySystem(Nil, plugin)
-    implicit val localRepo = Path.userHome / ".m2" / "repository"
+  def installIt(artifact: AetherArtifact, localRepo: File, plugin: Boolean)(implicit streams: TaskStreams) {
 
     val request = new InstallRequest()
     val parent = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
-
     try {
-      system.install(Booter.newSession, request)
+      val (system, session) = Booter(localRepo, streams, Nil, plugin)
+      system.install(session, request)
     }
     catch {
       case e: Exception => e.printStackTrace(); throw e
