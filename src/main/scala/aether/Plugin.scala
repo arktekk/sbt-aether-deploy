@@ -46,20 +46,7 @@ object Aether extends sbt.Plugin {
 
   lazy val deployTask = deploy <<= (publishTo, sbtPlugin, wagons, credentials, aetherArtifact, streams).map{
     (repo: Option[Resolver], plugin: Boolean, wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams) => {
-      val repository = repo.collect{
-        case x: MavenRepository => x
-        case x => sys.error("The configured repo MUST be a maven repo, but was: " + x)
-      }.getOrElse(sys.error("There MUST be a configured publish repo"))
-      val maybeCred = scala.util.control.Exception.allCatch.apply {
-        val href = URI.create(repository.root)
-        val c = Credentials.forHost(cred, href.getHost)
-        if (c.isEmpty) {
-           s.log.warn("No credentials supplied for %s".format(href.getHost))
-        }
-        c
-      }
-
-      deployIt(artifact, plugin, wag, repository, maybeCred)(s)
+      deployIt(repo, artifact, plugin, wag, cred)(s)
     }}
 
   lazy val installTask = install <<= (aetherArtifact, streams, sbtPlugin).map{
@@ -91,12 +78,26 @@ object Aether extends sbt.Plugin {
     builder.build()
   }
 
-  private def deployIt(artifact: AetherArtifact, plugin: Boolean, wagons: Seq[WagonWrapper], repo: MavenRepository, credentials: Option[DirectCredentials])(implicit streams: TaskStreams) {
+  def deployIt(repo: Option[Resolver], artifact: AetherArtifact, plugin: Boolean, wagons: Seq[WagonWrapper], cred: Seq[Credentials])(implicit s: TaskStreams) {
     implicit val system = Booter.newRepositorySystem(wagons, plugin)
     implicit val localRepo = Path.userHome / ".m2" / "repository"
 
+    val repository = repo.collect{
+      case x: MavenRepository => x
+      case x => sys.error("The configured repo MUST be a maven repo, but was: " + x)
+    }.getOrElse(sys.error("There MUST be a configured publish repo"))
+
+    val maybeCred = scala.util.control.Exception.allCatch.apply {
+      val href = URI.create(repository.root)
+      val c = Credentials.forHost(cred, href.getHost)
+      if (c.isEmpty) {
+         s.log.warn("No credentials supplied for %s".format(href.getHost))
+      }
+      c
+    }
+
     val request = new DeployRequest()
-    request.setRepository(toRepository(repo, plugin, credentials))
+    request.setRepository(toRepository(repository, plugin, maybeCred))
     val parent = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
@@ -109,7 +110,7 @@ object Aether extends sbt.Plugin {
     }
   }
 
-  private def installIt(artifact: AetherArtifact, plugin: Boolean)(implicit streams: TaskStreams) {
+  def installIt(artifact: AetherArtifact, plugin: Boolean)(implicit streams: TaskStreams) {
     implicit val system = Booter.newRepositorySystem(Nil, plugin)
     implicit val localRepo = Path.userHome / ".m2" / "repository"
 
