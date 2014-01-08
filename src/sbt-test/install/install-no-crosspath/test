@@ -1,0 +1,6 @@
+# Deploy to file url
+> publish-local
+$ exists target/repo/deploy-file
+$ exists target/repo/deploy-file/deploy-file/0.1/
+$ exists target/repo/deploy-file/deploy-file/0.1/deploy-file-0.1.jar
+$ exists target/repo/deploy-file/deploy-file/0.1/deploy-file-0.1.pom
