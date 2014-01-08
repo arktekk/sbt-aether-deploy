@@ -13,10 +13,6 @@ object Build extends sbt.Build {
       name := "aether-deploy", 
       libraryDependencies := deps,
       scalacOptions := Seq("-deprecation", "-unchecked"),
-      //scalaVersion := "2.9.2",
-      //crossScalaVersions := Seq("2.10.0", "2.9.2"),
-      sbtVersion in Global := "0.13.0-RC5",
-      scalaVersion in Global := "2.10.2",
       manifestSetting,
       publishSetting,
       sbtPlugin := true,
@@ -26,8 +22,8 @@ object Build extends sbt.Build {
   )
 
   object Dependencies {
-    val mavenVersion = "3.1.0"
-    val aetherVersion: String = "0.9.0.M3"
+    val mavenVersion = "3.1.1"
+    val aetherVersion: String = "0.9.0.M4"
 
     val deps = Seq(
         "org.apache.maven" % "maven-aether-provider" % mavenVersion intransitive(),
