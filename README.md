@@ -6,7 +6,7 @@ Aether is the same library as maven itself uses, meaning that the same behaviour
 
 ```scala
 ...
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.10")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.11")
 ...
 ```
 
@@ -65,7 +65,7 @@ To deploy to local maven repository.
 
 Documentation for proxies can be found [here](http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html)
 
-# Using the plugin with sbt-pgp-plugin 0.8
+# Using the plugin with sbt-pgp-plugin 0.8 or higher
 
 Previously the [sbt-pgp-plugin](https://github.com/sbt/sbt-pgp) hooked into the published-artifacts task, 
 and this plugin does the same. This is no longer the case.
