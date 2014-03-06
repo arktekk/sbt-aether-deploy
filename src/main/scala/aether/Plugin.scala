@@ -34,7 +34,7 @@ object Aether extends sbt.Plugin {
 
   lazy val defaultLocalRepo = aetherLocalRepo := Path.userHome / ".m2" / "repository"
 
-  lazy val defaultCoordinates = coordinates <<= (organization, name, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
+  lazy val defaultCoordinates = coordinates <<= (organization, normalizedName, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
     (o, n, v, sbtV, scalaV, crossPath, plugin) => {
       val artifactId = if (crossPath && !plugin) "%s_%s".format(n, scalaV) else n
       val coords = MavenCoordinates(o, artifactId, v, None)
