@@ -23,8 +23,8 @@ object Build extends sbt.Build {
   ).settings(net.virtualvoid.sbt.cross.CrossPlugin.crossBuildingSettings: _*)
 
   object Dependencies {
-    val mavenVersion = "3.1.1"
-    val aetherVersion: String = "0.9.0.M4"
+    val mavenVersion = "3.2.1"
+    val aetherVersion = "0.9.0.v20140226"
 
     val deps = Seq(
         "org.apache.maven" % "maven-aether-provider" % mavenVersion intransitive(),

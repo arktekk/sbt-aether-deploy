@@ -1,18 +1,23 @@
 package aether
 
-import org.eclipse.aether.repository.{ProxySelector, LocalRepository}
-import org.eclipse.aether.{DefaultRepositorySystemSession, RepositorySystemSession, RepositorySystem}
 import java.io.File
-import org.eclipse.aether.transport.wagon.{WagonTransporterFactory, WagonConfigurator, WagonProvider}
-import org.eclipse.aether.transport.file.FileTransporterFactory
+
+import org.apache.maven.repository.internal._
+
+import org.eclipse.aether.{DefaultRepositorySystemSession, RepositorySystemSession, RepositorySystem}
+
 import org.eclipse.aether.impl._
-import org.eclipse.aether.transport.http.HttpTransporterFactory
+import org.eclipse.aether.repository.{ProxySelector, LocalRepository}
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory
+import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
+import org.eclipse.aether.spi.locator.Service
+import org.eclipse.aether.transport.wagon.{WagonTransporterFactory, WagonConfigurator, WagonProvider}
+import org.eclipse.aether.transport.file.FileTransporterFactory
+import org.eclipse.aether.transport.http.HttpTransporterFactory
+
 
 import sbt.std.TaskStreams
-import org.apache.maven.repository.internal._
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 
 object Booter {
   private def newRepositorySystem(wagons: Seq[WagonWrapper], plugin: Boolean): RepositorySystem = {
@@ -59,16 +64,17 @@ object Booter {
   }
 
   private def addTransporterFactories(locator: DefaultServiceLocator) {
-    val wagonRepositoryConnectorFactory = new WagonTransporterFactory()
-    wagonRepositoryConnectorFactory.setPriority(1000)
-    val httpTransporterFactory = new HttpTransporterFactory()
-    httpTransporterFactory.setPriority(0)
-    val fileRepositoryConnectorFactory = new FileTransporterFactory()
-    fileRepositoryConnectorFactory.setPriority(100000)
-    locator.setServices(classOf[TransporterFactory], wagonRepositoryConnectorFactory, fileRepositoryConnectorFactory, httpTransporterFactory)
-    wagonRepositoryConnectorFactory.initService(locator)
-    fileRepositoryConnectorFactory.initService(locator)
-    httpTransporterFactory.initService(locator)
+    def configure[A <: TransporterFactory with Service](in: A): A = {
+      in.initService(locator)
+      in
+    }
 
+    val services = Seq(
+      configure(new HttpTransporterFactory()),
+      configure(new WagonTransporterFactory()).setPriority(1000f),
+      configure(new FileTransporterFactory()).setPriority(10000f)
+    )
+      
+    locator.setServices(classOf[TransporterFactory], services : _*)
   }
 }
