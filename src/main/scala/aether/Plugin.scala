@@ -161,6 +161,10 @@ case class AetherSubArtifact(file: File, classifier: Option[String] = None, exte
 case class AetherArtifact(file: File, coordinates: MavenCoordinates, subartifacts: Seq[AetherSubArtifact] = Nil) {
   def isSbtPlugin = coordinates.props.contains(MavenCoordinates.SbtVersion)
 
+  def attach(file: File, classifier: String) = {
+    copy(subartifacts = subartifacts :+ AetherSubArtifact(file, Some(classifier)))
+  }
+
   import collection.JavaConverters._
   def toArtifact = new DefaultArtifact(
     coordinates.groupId,
