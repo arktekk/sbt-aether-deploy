@@ -6,7 +6,7 @@ organization := "deploy-file"
 
 scalaVersion := "2.10.2"
 
-seq(aetherPublishBothSettings: _*)
+aetherPublishBothSettings
 
 crossPaths := false
 

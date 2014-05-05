@@ -1,1 +1,1 @@
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.11-SNAPSHOT")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.12-SNAPSHOT")

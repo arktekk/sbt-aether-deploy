@@ -6,6 +6,6 @@ organization := "deploy-file"
 
 scalaVersion := "2.9.1"
 
-seq(aetherPublishBothSettings: _*)
+aetherPublishBothSettings
 
 aetherLocalRepo := file(".") / "target" / "repo"
