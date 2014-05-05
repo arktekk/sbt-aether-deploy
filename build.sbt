@@ -33,3 +33,5 @@ CrossBuilding.crossSbtVersions := Seq("0.13")
 ScriptedPlugin.scriptedSettings
 
 net.virtualvoid.sbt.cross.CrossPlugin.crossBuildingSettings
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.1" % "provided")

@@ -10,6 +10,7 @@ import org.eclipse.aether.repository.{Proxy, RemoteRepository}
 import java.net.URI
 import org.eclipse.aether.repository.RemoteRepository.Builder
 import org.eclipse.aether.util.repository.AuthenticationBuilder
+import com.typesafe.sbt.pgp.PgpKeys
 
 object Aether extends sbt.Plugin {
   lazy val aetherArtifact = TaskKey[AetherArtifact]("Main artifact")
@@ -19,28 +20,44 @@ object Aether extends sbt.Plugin {
   lazy val install = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
   lazy val aetherLocalRepo = SettingKey[File]("Local maven repository.")
 
-  lazy val aetherSettings: Seq[Setting[_]] = Seq(
+  lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
     wagons := Seq.empty,
     aetherLocalRepo := Path.userHome / ".m2" / "repository",
     defaultCoordinates,
-    defaultArtifact,
     deployTask,
     installTask
   )
+
+
+  lazy val aetherSettings: Seq[Setting[_]] = aetherBaseSettings ++ Seq(defaultCoordinates)
 
   lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
   lazy val aetherPublishLocalSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publishLocal <<= install.dependsOn(publishLocal))
   lazy val aetherPublishBothSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy, publishLocal <<= install.dependsOn(publishLocal))
 
-  def defaultCoordinates = coordinates <<= (organization, artifact, (version in ThisBuild), scalaBinaryVersion, sbtBinaryVersion, sbtPlugin).apply{
-    (o, artifact, v, scalaV, sbtV, plugin) => {
-      val coords = MavenCoordinates(o, artifact.name, v, artifact.classifier, artifact.extension)
+  //Signed
+  lazy val aetherSignedSettings: Seq[Setting[_]] = aetherBaseSettings ++ Seq(signedArtifact)
+
+  lazy val aetherPublishSignedSettings: Seq[Setting[_]] = aetherSignedSettings ++ Seq(PgpKeys.publishSigned <<= deploy)
+  lazy val aetherPublishSignedLocalSettings: Seq[Setting[_]] = aetherSignedSettings ++ Seq(PgpKeys.publishLocalSigned <<= install.dependsOn(PgpKeys.publishLocalSigned))
+  lazy val aetherPublishSignedBothSettings: Seq[Setting[_]] = aetherSignedSettings ++ Seq(PgpKeys.publishSigned <<= deploy, PgpKeys.publishLocalSigned <<= install.dependsOn(PgpKeys.publishLocalSigned))
+
+
+  lazy val defaultCoordinates = coordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
+     (o, artifact, v, sbtV, scalaV, crossPath, plugin) => {
+      val artifactId = if (crossPath && !plugin) "%s_%s".format(artifact.name, scalaV) else artifact.name
+      val coords = MavenCoordinates(o, artifactId, v, None, artifact.extension)
       if (plugin) coords.withSbtVersion(sbtV).withScalaVersion(scalaV) else coords
     }
   }
 
-  def defaultArtifact = aetherArtifact <<= (coordinates, artifact in Compile, makePom in Compile, packagedArtifacts in Compile) map {
-    (coords: MavenCoordinates, mainArtifact: Artifact, pom: File, artifacts: Map[Artifact, File]) =>
+  def defaultArtifact = aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, packagedArtifacts in Compile) map {
+    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
+      createArtifact(artifacts, pom, coords, mainArtifact)
+  }
+
+  def signedArtifact = aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, PgpKeys.signedArtifacts in Compile) map {
+    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
       createArtifact(artifacts, pom, coords, mainArtifact)
   }
 
@@ -54,12 +71,13 @@ object Aether extends sbt.Plugin {
       installIt(artifact, localR, plugin)(s)
     }}
 
-  def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: Artifact): AetherArtifact = {
+  def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
     val filtered = artifacts.filterNot {
-      case (a, f) => a == mainArtifact
+       case (a, f) => a.classifier == None && !a.extension.contains("asc")
     }
     val subArtifacts = AetherSubArtifact(pom, None, "pom") +: filtered.foldLeft(Vector[AetherSubArtifact]()) { case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq}
-    AetherArtifact(artifacts(mainArtifact), coords, subArtifacts)
+ 
+    AetherArtifact(mainArtifact, coords, subArtifacts)
   }
     
   private def toRepository(repo: MavenRepository, plugin: Boolean, credentials: Option[DirectCredentials]): RemoteRepository = {
