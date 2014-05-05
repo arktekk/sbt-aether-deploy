@@ -2,6 +2,8 @@
 Deploys sbt-artifacts using Eclipse aether. 
 Aether is the same library as maven itself uses, meaning that the same behaviour should be expected.
 
+Removed support for sbt 0.12
+
 ## project/plugins.sbt
 
 ```scala
@@ -24,16 +26,26 @@ publishTo <<= (version: String) {
   }
 }
 
-seq(aetherSettings: _*)
+aetherSettings
 ```
 
 
-## Override default publish/publish-local task
+## Override default publish task
 
 ```scala
-seq(aetherPublishSettings: _*)
+aetherPublishSettings
 ```
 
+## Override default publish-local task
+
+```scala
+aetherPublishLocalSettings
+```
+
+## Override both publish and publish-local task
+```scala
+aetherPublishBothSettings
+```
 
 ## Add credentials
 
@@ -73,7 +85,7 @@ and this plugin does the same. This is no longer the case.
 ## Workaround until code is updated
 
 ```scala
-seq(aetherSettings: _*)
+aetherSettings
 
 aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, com.typesafe.sbt.pgp.PgpKeys.signedArtifacts in Compile) map {
   (coords: aether.MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
@@ -87,12 +99,4 @@ This should now allow aether-deploy task to work with the sbt-pgp-plugin
 
 ```scala
 publishSigned <<= deploy
-```
-   
-# Using .scala file
-
-To use the plugin in a .scala file you have to import it like this:
-
-```scala
-import aether.Aether._
 ```

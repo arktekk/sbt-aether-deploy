@@ -12,18 +12,18 @@ import org.eclipse.aether.repository.RemoteRepository.Builder
 import org.eclipse.aether.util.repository.AuthenticationBuilder
 
 object Aether extends sbt.Plugin {
-  lazy val aetherArtifact = TaskKey[AetherArtifact]("aether-artifact", "Main artifact")
-  lazy val coordinates = SettingKey[MavenCoordinates]("aether-coordinates", "The maven coordinates to the main artifact. Should not be overridden")
-  lazy val wagons = SettingKey[Seq[WagonWrapper]]("aether-wagons", "The configured extra maven wagon wrappers.")
+  lazy val aetherArtifact = TaskKey[AetherArtifact]("Main artifact")
+  lazy val coordinates = SettingKey[MavenCoordinates]("The maven coordinates to the main artifact. Should not be overridden")
+  lazy val wagons = SettingKey[Seq[WagonWrapper]]("The configured extra maven wagon wrappers.")
   lazy val deploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
   lazy val install = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
-  lazy val aetherLocalRepo = SettingKey[File]("aether-localrepo", "Local maven repository.")
+  lazy val aetherLocalRepo = SettingKey[File]("Local maven repository.")
 
   lazy val aetherSettings: Seq[Setting[_]] = Seq(
-    defaultWagons,
+    wagons := Seq.empty,
+    aetherLocalRepo := Path.userHome / ".m2" / "repository",
     defaultCoordinates,
     defaultArtifact,
-    defaultLocalRepo,
     deployTask,
     installTask
   )
@@ -32,20 +32,15 @@ object Aether extends sbt.Plugin {
   lazy val aetherPublishLocalSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publishLocal <<= install.dependsOn(publishLocal))
   lazy val aetherPublishBothSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy, publishLocal <<= install.dependsOn(publishLocal))
 
-  lazy val defaultLocalRepo = aetherLocalRepo := Path.userHome / ".m2" / "repository"
-
-  lazy val defaultCoordinates = coordinates <<= (organization, normalizedName, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
-    (o, n, v, sbtV, scalaV, crossPath, plugin) => {
-      val artifactId = if (crossPath && !plugin) "%s_%s".format(n, scalaV) else n
-      val coords = MavenCoordinates(o, artifactId, v, None)
+  def defaultCoordinates = coordinates <<= (organization, artifact, (version in ThisBuild), scalaBinaryVersion, sbtBinaryVersion, sbtPlugin).apply{
+    (o, artifact, v, scalaV, sbtV, plugin) => {
+      val coords = MavenCoordinates(o, artifact.name, v, artifact.classifier, artifact.extension)
       if (plugin) coords.withSbtVersion(sbtV).withScalaVersion(scalaV) else coords
     }
   }
 
-  lazy val defaultWagons = wagons := Seq.empty
-  
-  lazy val defaultArtifact = aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, packagedArtifacts in Compile) map {
-    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
+  def defaultArtifact = aetherArtifact <<= (coordinates, artifact in Compile, makePom in Compile, packagedArtifacts in Compile) map {
+    (coords: MavenCoordinates, mainArtifact: Artifact, pom: File, artifacts: Map[Artifact, File]) =>
       createArtifact(artifacts, pom, coords, mainArtifact)
   }
 
@@ -59,20 +54,12 @@ object Aether extends sbt.Plugin {
       installIt(artifact, localR, plugin)(s)
     }}
 
-  def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: sbt.File): AetherArtifact = {
-    val subartifacts = artifacts.filterNot {
-      case (a, f) => a.classifier == None && !a.extension.contains("asc")
+  def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: Artifact): AetherArtifact = {
+    val filtered = artifacts.filterNot {
+      case (a, f) => a == mainArtifact
     }
-    val actualSubArtifacts = AetherSubArtifact(pom, None, "pom") +: subartifacts.foldLeft(Vector[AetherSubArtifact]()) {
-      case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq
-    }
-    val actualCoords = coords.copy(extension = getActualExtension(mainArtifact))
-    AetherArtifact(mainArtifact, actualCoords, actualSubArtifacts)
-  }
-
-  private def getActualExtension(file: File) = {
-    val name = file.getName
-    name.substring(name.lastIndexOf('.') + 1)
+    val subArtifacts = AetherSubArtifact(pom, None, "pom") +: filtered.foldLeft(Vector[AetherSubArtifact]()) { case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq}
+    AetherArtifact(artifacts(mainArtifact), coords, subArtifacts)
   }
     
   private def toRepository(repo: MavenRepository, plugin: Boolean, credentials: Option[DirectCredentials]): RemoteRepository = {

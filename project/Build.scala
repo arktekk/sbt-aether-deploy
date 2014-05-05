@@ -18,7 +18,7 @@ object Build extends sbt.Build {
       sbtPlugin := true,
       credentials += Credentials(Path.userHome / ".sbt" / "arktekk-credentials"),
 	    pomIncludeRepository := { x => false },
-      CrossBuilding.crossSbtVersions := Seq("0.13", "0.12")
+      CrossBuilding.crossSbtVersions := Seq("0.13")
     ) ++ mavenCentralFrouFrou ++ ScriptedPlugin.scriptedSettings
   ).settings(net.virtualvoid.sbt.cross.CrossPlugin.crossBuildingSettings: _*)
 
