@@ -16,8 +16,6 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.11")
 ## Build file
   
 ```scala
-import aether.Aether._
-  
 publishTo <<= (version: String) {
   if (version.endsWith("SNAPSHOT")) {
     Some("Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
@@ -26,7 +24,7 @@ publishTo <<= (version: String) {
   }
 }
 
-aetherSettings
+aetherSettings //This can be replaced with a config as seen below.
 ```
 
 
