@@ -77,18 +77,12 @@ Documentation for proxies can be found [here](http://docs.oracle.com/javase/6/do
 
 # Using the plugin with sbt-pgp-plugin 0.8 or higher
 
-Previously the [sbt-pgp-plugin](https://github.com/sbt/sbt-pgp) hooked into the published-artifacts task, 
-and this plugin does the same. This is no longer the case.
+You will need to add the sbt-pgp-plugin as described [here](https://github.com/sbt/sbt-pgp).
 
-## Workaround until code is updated
+## Add this setting instead of the normal aetherSettings.
 
 ```scala
-aetherSettings
-
-aetherArtifact <<= (coordinates, Keys.`package` in Compile, makePom in Compile, com.typesafe.sbt.pgp.PgpKeys.signedArtifacts in Compile) map {
-  (coords: aether.MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
-    aether.Aether.createArtifact(artifacts, pom, coords, mainArtifact)
-}
+aetherSignedSettings
 ```
 
 This should now allow aether-deploy task to work with the sbt-pgp-plugin
@@ -96,5 +90,16 @@ This should now allow aether-deploy task to work with the sbt-pgp-plugin
 ## Overriding the publish-signed task
 
 ```scala
-publishSigned <<= deploy
+aetherPublishSignedSettings
+```
+## Overriding the publish-signed-local task
+
+```scala
+aetherPublishSignedLocalSettings
+```
+
+## Overriding the publish-signed and publish-signed-local task
+
+```scala
+aetherPublishSignedBothSettings
 ```
