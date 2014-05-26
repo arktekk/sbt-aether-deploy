@@ -29,7 +29,7 @@ object Aether extends sbt.Plugin {
   )
 
 
-  lazy val aetherSettings: Seq[Setting[_]] = aetherBaseSettings ++ Seq(defaultCoordinates)
+  lazy val aetherSettings: Seq[Setting[_]] = aetherBaseSettings ++ Seq(defaultArtifact)
 
   lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
   lazy val aetherPublishLocalSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publishLocal <<= install.dependsOn(publishLocal))
