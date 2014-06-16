@@ -11,3 +11,5 @@ publishTo  := Some("foo" at (file(".") / "target" / "repo").toURI.toURL.toString
 webappSettings
 
 aetherSettings
+
+//aetherPackageMain <<= packageWar in Compile
