@@ -8,7 +8,7 @@ Removed support for sbt 0.12
 
 ```scala
 ...
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.11")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.13")
 ...
 ```
 
