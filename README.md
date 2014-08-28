@@ -2,8 +2,6 @@
 Deploys sbt-artifacts using Eclipse aether. 
 Aether is the same library as maven itself uses, meaning that the same behaviour should be expected.
 
-Removed support for sbt 0.12
-
 ## project/plugins.sbt
 
 ```scala
@@ -11,6 +9,11 @@ Removed support for sbt 0.12
 addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.13")
 ...
 ```
+
+## Caveat
+If you see errors similar to what is described in this ticket https://github.com/arktekk/sbt-aether-deploy/issues/25 then you might want to check if you are using a global plugin. 
+
+There are known incompabilities with `sbt-pgp` if sbt-pgp is used as a global plugin.
 
 
 ## Build file
