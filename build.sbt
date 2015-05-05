@@ -5,11 +5,12 @@ description := "Deploy in SBT using Sonatype Aether"
 name := "aether-deploy"
 
 libraryDependencies <++= (target).apply{ (target) =>
-  val mavenVersion = "3.2.1"
-  val aetherVersion = "0.9.0.v20140226"
+  val mavenVersion = "3.3.3"
+  val aetherVersion = "1.0.2.v20150114"
   Seq(
     ExcludeAllTransitiveDeps(target, "org.apache.maven" % "maven-aether-provider" % mavenVersion),
     ExcludeAllTransitiveDeps(target, "org.apache.maven" % "maven-model-builder" % mavenVersion),
+    ExcludeAllTransitiveDeps(target, "org.apache.maven" % "maven-builder-support" % mavenVersion),
     ExcludeAllTransitiveDeps(target, "org.apache.maven" % "maven-repository-metadata" % mavenVersion),
     ExcludeAllTransitiveDeps(target, "org.codehaus.plexus" % "plexus-interpolation" % "1.19"),
     "org.apache.maven" % "maven-model" % mavenVersion,
@@ -28,10 +29,8 @@ scalacOptions := Seq("-deprecation", "-unchecked")
 
 sbtPlugin := true
 
-CrossBuilding.crossSbtVersions := Seq("0.13")
-
 ScriptedPlugin.scriptedSettings
 
-net.virtualvoid.sbt.cross.CrossPlugin.crossBuildingSettings
+addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3" % "provided")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.1" % "provided")
+graphSettings
