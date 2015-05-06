@@ -1,3 +1,5 @@
+import aether.AetherKeys._
+
 version := "0.1"
 
 name := "webdav"
@@ -10,6 +12,6 @@ credentials += Credentials(file("./credentials"))
 
 publishTo := Some("dav" at "dav://localhost:8008")
 
-aetherPublishSettings
+overridePublishSettings
 
-wagons := Seq(aether.WagonWrapper("dav", "org.apache.maven.wagon.providers.webdav.WebDavWagon"))
+aetherWagons := Seq(aether.WagonWrapper("dav", "org.apache.maven.wagon.providers.webdav.WebDavWagon"))

@@ -4,13 +4,14 @@ name := "deploy-file"
 
 organization := "deploy-file"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.11.6"
 
 publishTo  := Some("foo" at (file(".") / "target" / "repo").toURI.toURL.toString)
 
-aetherSignedSettings
-
 useGpg := true
 
-//gpgCommand := "gpg2"
+enablePlugins(SignedAetherPlugin)
 
+disablePlugins(AetherPlugin)
+
+overridePublishSignedSettings

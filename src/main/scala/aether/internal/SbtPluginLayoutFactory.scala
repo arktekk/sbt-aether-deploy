@@ -1,4 +1,5 @@
 package aether
+package internal
 
 import org.eclipse.aether.spi.connector.layout.{RepositoryLayout, RepositoryLayoutFactory}
 import org.eclipse.aether.RepositorySystemSession

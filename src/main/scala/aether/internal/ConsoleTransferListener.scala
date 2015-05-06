@@ -1,4 +1,5 @@
 package aether
+package internal
 
 import java.util.concurrent.ConcurrentHashMap
 import org.eclipse.aether.transfer.{TransferEvent, AbstractTransferListener, TransferResource}

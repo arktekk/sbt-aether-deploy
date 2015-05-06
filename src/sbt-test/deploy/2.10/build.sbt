@@ -8,4 +8,4 @@ scalaVersion := "2.10.0"
 
 publishTo  := Some("foo" at (file(".") / "target" / "repo").toURI.toURL.toString)
 
-aetherPublishSettings
+overridePublishSettings

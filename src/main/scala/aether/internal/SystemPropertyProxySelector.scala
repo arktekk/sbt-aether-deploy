@@ -1,4 +1,5 @@
 package aether
+package internal
 
 import org.eclipse.aether.util.repository.{AuthenticationBuilder, DefaultProxySelector}
 import util.Properties

@@ -1,4 +1,5 @@
 package aether
+package internal
 
 import java.io.File
 

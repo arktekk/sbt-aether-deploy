@@ -1,4 +1,5 @@
 package aether
+package internal
 
 import org.eclipse.aether.{RepositoryEvent, AbstractRepositoryListener}
 import sbt.Logger

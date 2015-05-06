@@ -2,50 +2,53 @@ package aether
 
 import sbt._
 import Keys._
-import org.eclipse.aether.util.artifact.SubArtifact
-import org.eclipse.aether.artifact.DefaultArtifact
 import org.eclipse.aether.deployment.DeployRequest
 import org.eclipse.aether.installation.InstallRequest
 import org.eclipse.aether.repository.{Proxy, RemoteRepository}
 import java.net.URI
 import org.eclipse.aether.repository.RemoteRepository.Builder
 import org.eclipse.aether.util.repository.AuthenticationBuilder
-import com.typesafe.sbt.pgp.PgpKeys
 
-object Aether extends sbt.Plugin {
+import internal._
+
+object AetherKeys {
   val aetherArtifact = TaskKey[AetherArtifact]("Main artifact")
+  val aetherCoordinates = SettingKey[MavenCoordinates]("Internal coordinates")
+  val aetherDeploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
+  val aetherInstall = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
   val aetherPackageMain = TaskKey[File]("package main Artifact")
-  val coordinates = SettingKey[MavenCoordinates]("The maven coordinates to the main artifact. Should not be overridden")
-  val wagons = SettingKey[Seq[WagonWrapper]]("The configured extra maven wagon wrappers.")
-  val deploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
-  val install = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
+  val aetherWagons = SettingKey[Seq[WagonWrapper]]("The configured extra maven wagon wrappers.")
   val aetherLocalRepo = SettingKey[File]("Local maven repository.")
+}
 
+import AetherKeys._
+
+object AetherPlugin extends AetherPlugin {
+  override def trigger = allRequirements
+  override def requires = sbt.plugins.IvyPlugin
+  override def projectSettings = aetherBaseSettings ++ Seq(defaultArtifact)
+
+  object autoImport {
+    def overridePublishSettings: Seq[Setting[_]] = Seq(publish <<= aetherDeploy)
+    def overridePublishLocalSettings: Seq[Setting[_]] = Seq(publishLocal <<= aetherInstall.dependsOn(publishLocal))
+    def overridePublishBothSettings: Seq[Setting[_]] = overridePublishSettings ++ overridePublishLocalSettings
+  }
+}
+
+
+trait AetherPlugin extends AutoPlugin {
+  
   lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
-    wagons := Seq.empty,
+    aetherWagons := Seq.empty,
     aetherLocalRepo := Path.userHome / ".m2" / "repository",
     defaultCoordinates,
     deployTask,
     installTask,
     aetherPackageMain <<= Keys.`package` in Compile
   )
+ 
 
-
-  lazy val aetherSettings: Seq[Setting[_]] = aetherBaseSettings ++ Seq(defaultArtifact)
-
-  lazy val aetherPublishSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy)
-  lazy val aetherPublishLocalSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publishLocal <<= install.dependsOn(publishLocal))
-  lazy val aetherPublishBothSettings: Seq[Setting[_]] = aetherSettings ++ Seq(publish <<= deploy, publishLocal <<= install.dependsOn(publishLocal))
-
-  //Signed
-  lazy val aetherSignedSettings: Seq[Setting[_]] = aetherBaseSettings ++ Seq(signedArtifact)
-
-  lazy val aetherPublishSignedSettings: Seq[Setting[_]] = aetherSignedSettings ++ Seq(PgpKeys.publishSigned <<= deploy)
-  lazy val aetherPublishSignedLocalSettings: Seq[Setting[_]] = aetherSignedSettings ++ Seq(PgpKeys.publishLocalSigned <<= install.dependsOn(PgpKeys.publishLocalSigned))
-  lazy val aetherPublishSignedBothSettings: Seq[Setting[_]] = aetherSignedSettings ++ Seq(PgpKeys.publishSigned <<= deploy, PgpKeys.publishLocalSigned <<= install.dependsOn(PgpKeys.publishLocalSigned))
-
-
-  lazy val defaultCoordinates = coordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
+  def defaultCoordinates = aetherCoordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
      (o, artifact, v, sbtV, scalaV, crossPath, plugin) => {
       val artifactId = if (crossPath && !plugin) "%s_%s".format(artifact.name, scalaV) else artifact.name
       val coords = MavenCoordinates(o, artifactId, v, None, artifact.extension)
@@ -53,22 +56,18 @@ object Aether extends sbt.Plugin {
     }
   }
 
-  def defaultArtifact = aetherArtifact <<= (coordinates, aetherPackageMain, makePom in Compile, packagedArtifacts in Compile) map {
+  def defaultArtifact = aetherArtifact <<= (aetherCoordinates, aetherPackageMain, makePom in Compile, packagedArtifacts in Compile) map {
     (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
       createArtifact(artifacts, pom, coords, mainArtifact)
   }
 
-  def signedArtifact = aetherArtifact <<= (coordinates, aetherPackageMain, makePom in Compile, PgpKeys.signedArtifacts in Compile) map {
-    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
-      createArtifact(artifacts, pom, coords, mainArtifact)
-  }
 
-  lazy val deployTask = deploy <<= (publishTo, sbtPlugin, wagons, credentials, aetherArtifact, streams, aetherLocalRepo).map{
+  lazy val deployTask = aetherDeploy <<= (publishTo, sbtPlugin, aetherWagons, credentials, aetherArtifact, streams, aetherLocalRepo).map{
     (repo: Option[Resolver], plugin: Boolean, wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams, localR: File) => {
       deployIt(repo, localR, artifact, plugin, wag, cred)(s)
     }}
 
-  lazy val installTask = install <<= (aetherArtifact, aetherLocalRepo, streams, sbtPlugin).map{
+  lazy val installTask = aetherInstall <<= (aetherArtifact, aetherLocalRepo, streams, sbtPlugin).map{
     (artifact: AetherArtifact, localR: File, s: TaskStreams, plugin: Boolean) => {
       installIt(artifact, localR, plugin)(s)
     }}
@@ -101,7 +100,7 @@ object Aether extends sbt.Plugin {
     val maybeCred = scala.util.control.Exception.allCatch.apply {
       val href = URI.create(repository.root)
       val c = Credentials.forHost(cred, href.getHost)
-      if (c.isEmpty) {
+      if (c.isEmpty && href.getHost != null) {
          s.log.warn("No credentials supplied for %s".format(href.getHost))
       }
       c
@@ -137,58 +136,4 @@ object Aether extends sbt.Plugin {
       case e: Exception => e.printStackTrace(); throw e
     }
   }
-}
-
-case class MavenCoordinates(groupId: String, artifactId: String, version: String, classifier: Option[String], extension: String = "jar", props: Map[String, String] = Map.empty) {
-  def coordinates = "%s:%s:%s%s:%s".format(groupId, artifactId, extension, classifier.map(_ + ":").getOrElse(""), version)
-
-  def withScalaVersion(v: String) = withProp(MavenCoordinates.ScalaVersion, v)
-  def withSbtVersion(v: String) = withProp(MavenCoordinates.SbtVersion, v)
-  def withExtension(file: File) = {
-    val ext = {
-      val i = file.getName.lastIndexOf(".")
-      file.getName.substring(i + 1)
-    }.toLowerCase
-    if (ext == extension) this else copy(extension = ext)
-  }
-
-  def withProp(name: String, value: String) = copy(props = props.updated(name, value))
-}
-
-object MavenCoordinates {
-  val ScalaVersion = "scala-version"
-  val SbtVersion = "sbt-version"
-
-  def apply(coords: String): Option[MavenCoordinates] = coords.split(":") match {
-    case Array(groupId, artifactId, extension, v) =>
-      Some(MavenCoordinates(groupId, artifactId, v, None, extension))
-
-    case Array(groupId, artifactId, extension, classifier, v) =>
-      Some(MavenCoordinates(groupId, artifactId, v, Some(classifier), extension))
-
-    case _ => None
-  }
-}
-
-case class AetherSubArtifact(file: File, classifier: Option[String] = None, extension: String = "jar") {
-  def toArtifact(parent: DefaultArtifact) = new SubArtifact(parent, classifier.orNull, extension, parent.getProperties, file)
-}
-
-case class AetherArtifact(file: File, coordinates: MavenCoordinates, subartifacts: Seq[AetherSubArtifact] = Nil) {
-  def isSbtPlugin = coordinates.props.contains(MavenCoordinates.SbtVersion)
-
-  def attach(file: File, classifier: String, extension: String = "jar") = {
-    copy(subartifacts = subartifacts :+ AetherSubArtifact(file, Some(classifier), extension))
-  }
-
-  import collection.JavaConverters._
-  def toArtifact = new DefaultArtifact(
-    coordinates.groupId,
-    coordinates.artifactId,
-    coordinates.classifier.orNull,
-    coordinates.extension,
-    coordinates.version,
-    coordinates.props.asJava,
-    file
-  )
 }

@@ -6,7 +6,7 @@ Aether is the same library as maven itself uses, meaning that the same behaviour
 
 ```scala
 ...
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.13")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.14")
 ...
 ```
 
@@ -26,26 +26,26 @@ publishTo <<= (version: String) {
     Some("Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
   }
 }
-
-aetherSettings //This can be replaced with a config as seen below.
 ```
+
+This plugin is now an Autoplugin, so there is no need to add extra config to make it work.
 
 
 ## Override default publish task
 
 ```scala
-aetherPublishSettings
+overridePublishSettings
 ```
 
 ## Override default publish-local task
 
 ```scala
-aetherPublishLocalSettings
+overridePublishLocalSettings
 ```
 
 ## Override both publish and publish-local task
 ```scala
-aetherPublishBothSettings
+overridePublishBothSettings
 ```
 
 ## Add credentials
@@ -78,14 +78,15 @@ To deploy to local maven repository.
 
 Documentation for proxies can be found [here](http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html)
 
-# Using the plugin with sbt-pgp-plugin 0.8 or higher
+# Using the plugin with sbt-pgp-plugin 1.0 or higher
 
 You will need to add the sbt-pgp-plugin as described [here](https://github.com/sbt/sbt-pgp).
 
-## Add this setting instead of the normal aetherSettings.
-
 ```scala
-aetherSignedSettings
+enablePlugins(SignedAetherPlugin)
+
+disablePlugins(AetherPlugin)
+
 ```
 
 This should now allow aether-deploy task to work with the sbt-pgp-plugin
@@ -93,16 +94,16 @@ This should now allow aether-deploy task to work with the sbt-pgp-plugin
 ## Overriding the publish-signed task
 
 ```scala
-aetherPublishSignedSettings
+overridePublishSignedSettings
 ```
 ## Overriding the publish-signed-local task
 
 ```scala
-aetherPublishSignedLocalSettings
+overridePublishSignedLocalSettings
 ```
 
 ## Overriding the publish-signed and publish-signed-local task
 
 ```scala
-aetherPublishSignedBothSettings
+overridePublishSignedBothSettings
 ```

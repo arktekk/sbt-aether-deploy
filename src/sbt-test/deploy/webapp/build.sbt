@@ -4,12 +4,10 @@ name := "webapp"
 
 organization := "deploy"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.11.6"
 
 publishTo  := Some("foo" at (file(".") / "target" / "repo").toURI.toURL.toString)
 
-webappSettings
+warSettings
 
-aetherSettings
-
-//aetherPackageMain <<= packageWar in Compile
+overridePublishSettings

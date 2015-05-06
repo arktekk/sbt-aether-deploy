@@ -8,4 +8,4 @@ sbtPlugin := true
 
 publishTo  := Some("foo" at (file(".") / "target" / "repo").toURI.toURL.toString)
 
-aetherPublishSettings
+overridePublishSettings
