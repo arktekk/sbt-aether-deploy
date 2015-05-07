@@ -62,10 +62,12 @@ trait AetherPlugin extends AutoPlugin {
   }
 
 
-  lazy val deployTask = aetherDeploy <<= (publishTo, sbtPlugin, aetherWagons, credentials, aetherArtifact, streams, aetherLocalRepo).map{
-    (repo: Option[Resolver], plugin: Boolean, wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams, localR: File) => {
-      deployIt(repo, localR, artifact, plugin, wag, cred)(s)
-    }}
+  lazy val deployTask = aetherDeploy <<= (publishTo, publishArtifact in Compile, sbtPlugin, aetherWagons, credentials, aetherArtifact, streams, aetherLocalRepo).map{
+    (repo: Option[Resolver], pubArt: Boolean, plugin: Boolean, wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams, localR: File) => 
+        if (pubArt) {
+          deployIt(repo, localR, artifact, plugin, wag, cred)(s)
+        }
+    }
 
   lazy val installTask = aetherInstall <<= (aetherArtifact, aetherLocalRepo, streams, sbtPlugin).map{
     (artifact: AetherArtifact, localR: File, s: TaskStreams, plugin: Boolean) => {
