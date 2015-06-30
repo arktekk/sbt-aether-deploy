@@ -12,13 +12,13 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder
 import internal._
 
 object AetherKeys {
-  val aetherArtifact = TaskKey[AetherArtifact]("Main artifact")
-  val aetherCoordinates = SettingKey[MavenCoordinates]("Internal coordinates")
+  val aetherArtifact = taskKey[AetherArtifact]("Main artifact")
+  val aetherCoordinates = settingKey[MavenCoordinates]("Internal coordinates")
   val aetherDeploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
   val aetherInstall = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
-  val aetherPackageMain = TaskKey[File]("package main Artifact")
-  val aetherWagons = SettingKey[Seq[WagonWrapper]]("The configured extra maven wagon wrappers.")
-  val aetherLocalRepo = SettingKey[File]("Local maven repository.")
+  val aetherPackageMain = taskKey[File]("package main Artifact")
+  val aetherWagons = settingKey[Seq[WagonWrapper]]("The configured extra maven wagon wrappers.")
+  val aetherLocalRepo = settingKey[File]("Local maven repository.")
 }
 
 import AetherKeys._
