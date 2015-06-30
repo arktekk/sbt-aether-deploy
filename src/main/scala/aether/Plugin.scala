@@ -12,13 +12,13 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder
 import internal._
 
 object AetherKeys {
-  val aetherArtifact = TaskKey[AetherArtifact]("Main artifact")
-  val aetherCoordinates = SettingKey[MavenCoordinates]("Internal coordinates")
+  val aetherArtifact = taskKey[AetherArtifact]("Main artifact")
+  val aetherCoordinates = settingKey[MavenCoordinates]("Internal coordinates")
   val aetherDeploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
   val aetherInstall = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
-  val aetherPackageMain = TaskKey[File]("package main Artifact")
-  val aetherWagons = SettingKey[Seq[WagonWrapper]]("The configured extra maven wagon wrappers.")
-  val aetherLocalRepo = SettingKey[File]("Local maven repository.")
+  val aetherPackageMain = taskKey[File]("package main Artifact")
+  val aetherWagons = settingKey[Seq[WagonWrapper]]("The configured extra maven wagon wrappers.")
+  val aetherLocalRepo = settingKey[File]("Local maven repository.")
 }
 
 import AetherKeys._
@@ -48,11 +48,11 @@ trait AetherPlugin extends AutoPlugin {
   )
  
 
-  def defaultCoordinates = aetherCoordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
-     (o, artifact, v, sbtV, scalaV, crossPath, plugin) => {
-      val artifactId = if (crossPath && !plugin) "%s_%s".format(artifact.name, scalaV) else artifact.name
-      val coords = MavenCoordinates(o, artifactId, v, None, artifact.extension)
-      if (plugin) coords.withSbtVersion(sbtV).withScalaVersion(scalaV) else coords
+  def defaultCoordinates = aetherCoordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaVersion, scalaBinaryVersion, sbtPlugin, crossVersion).apply{
+     (o, artifact, v, sbtV, scalaV, scalaBinV, plugin, crossV) => {
+       val artifactId = if (!plugin) CrossVersion(crossV, scalaV, scalaBinV).map(_(artifact.name)) getOrElse artifact.name else artifact.name
+       val coords = MavenCoordinates(o, artifactId, v, None, artifact.extension)
+       if (plugin) coords.withSbtVersion(sbtV).withScalaVersion(scalaBinV) else coords
     }
   }
 
