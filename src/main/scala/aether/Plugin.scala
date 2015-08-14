@@ -51,7 +51,7 @@ trait AetherPlugin extends AutoPlugin {
   def defaultCoordinates = aetherCoordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaVersion, scalaBinaryVersion, /*crossPaths,*/ sbtPlugin, crossVersion).apply{
      (o, artifact, v, sbtV, scalaV, scalaBinV, /*crossPath,*/ plugin, crossV) => {
        //val artifactId = if (crossPath && !plugin) "%s_%s".format(artifact.name, scalaBinV) else artifact.name
-       val artifactId = CrossVersion(crossV, scalaV, scalaBinV).map(_(artifact.name)) getOrElse artifact.name
+       val artifactId = if (!plugin) CrossVersion(crossV, scalaV, scalaBinV).map(_(artifact.name)) getOrElse artifact.name else artifact.name
        val coords = MavenCoordinates(o, artifactId, v, None, artifact.extension)
        if (plugin) coords.withSbtVersion(sbtV).withScalaVersion(scalaBinV) else coords
     }
