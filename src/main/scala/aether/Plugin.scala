@@ -48,11 +48,11 @@ trait AetherPlugin extends AutoPlugin {
   )
  
 
-  def defaultCoordinates = aetherCoordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaBinaryVersion, crossPaths, sbtPlugin).apply{
-     (o, artifact, v, sbtV, scalaV, crossPath, plugin) => {
-      val artifactId = if (crossPath && !plugin) "%s_%s".format(artifact.name, scalaV) else artifact.name
-      val coords = MavenCoordinates(o, artifactId, v, None, artifact.extension)
-      if (plugin) coords.withSbtVersion(sbtV).withScalaVersion(scalaV) else coords
+  def defaultCoordinates = aetherCoordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaVersion, scalaBinaryVersion, sbtPlugin, crossVersion).apply{
+     (o, artifact, v, sbtV, scalaV, scalaBinV, plugin, crossV) => {
+       val artifactId = if (!plugin) CrossVersion(crossV, scalaV, scalaBinV).map(_(artifact.name)) getOrElse artifact.name else artifact.name
+       val coords = MavenCoordinates(o, artifactId, v, None, artifact.extension)
+       if (plugin) coords.withSbtVersion(sbtV).withScalaVersion(scalaBinV) else coords
     }
   }
 
