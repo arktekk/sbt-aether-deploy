@@ -8,7 +8,7 @@ organization := "deploy-file"
 
 scalaVersion := "2.10.2"
 
-overridePublishSettings
+overridePublishLocalSettings
 
 crossPaths := false
 
