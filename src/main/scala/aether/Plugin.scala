@@ -76,7 +76,7 @@ trait AetherPlugin extends AutoPlugin {
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
     val filtered = artifacts.filterNot {
-       case (a, f) => a.classifier == None && !a.extension.contains("asc")
+       case (a, f) => a.classifier.isEmpty && f == mainArtifact
     }
     val subArtifacts = AetherSubArtifact(pom, None, "pom") +: filtered.foldLeft(Vector[AetherSubArtifact]()) { case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq}
  

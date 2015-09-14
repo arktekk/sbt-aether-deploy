@@ -4,6 +4,6 @@ throw new RuntimeException("""
   |Specify this property using the scriptedLaunchOpts -D.
 """.stripMargin))
 
-addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "1.1.0")
+addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "2.0.4")
 
 addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % pluginVersion)
