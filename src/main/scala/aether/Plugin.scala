@@ -75,16 +75,16 @@ trait AetherPlugin extends AutoPlugin {
     }}
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
-    val filtered = artifacts.filterNot {
-       case (a, f) => a.classifier.isEmpty && f == mainArtifact
-    }
-    val subArtifacts = AetherSubArtifact(pom, None, "pom") +: filtered.foldLeft(Vector[AetherSubArtifact]()) { case (seq, (a, f)) => AetherSubArtifact(f, a.classifier, a.extension) +: seq}
- 
+    val subArtifacts = artifacts
+      .filterNot { case (a, f) => a.classifier.isEmpty && f == mainArtifact }
+      .map { case (a, f) => AetherSubArtifact(f, a.classifier, a.extension) }
+      .toSeq
+
     val realCoords = coords.withExtension(mainArtifact)
 
     AetherArtifact(mainArtifact, realCoords, subArtifacts)
   }
-    
+
   private def toRepository(repo: MavenRepository, plugin: Boolean, credentials: Option[DirectCredentials]): RemoteRepository = {
     val builder: Builder = new Builder(repo.name, if (plugin) "sbt-plugin" else "default", repo.root)
     credentials.foreach{c => builder.setAuthentication(new AuthenticationBuilder().addUsername(c.userName).addPassword(c.passwd).build()) }
