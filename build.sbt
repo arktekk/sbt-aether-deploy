@@ -4,18 +4,15 @@ description := "Deploy in SBT using Sonatype Aether"
 
 name := "aether-deploy"
 
-libraryDependencies <++= (target).apply{ (target) =>
-  val mavenVersion = "3.3.3"
-  val aetherVersion = "1.0.2.v20150114"
+libraryDependencies ++= {
+  val mavenVersion = "3.3.9"
+  val aetherVersion = "1.1.0"
   Seq(
-    ExcludeAllTransitiveDeps(target, "org.apache.maven" % "maven-aether-provider" % mavenVersion),
-    ExcludeAllTransitiveDeps(target, "org.apache.maven" % "maven-model-builder" % mavenVersion),
-    ExcludeAllTransitiveDeps(target, "org.apache.maven" % "maven-builder-support" % mavenVersion),
-    ExcludeAllTransitiveDeps(target, "org.apache.maven" % "maven-repository-metadata" % mavenVersion),
-    ExcludeAllTransitiveDeps(target, "org.codehaus.plexus" % "plexus-interpolation" % "1.19"),
+    "org.apache.maven" % "maven-aether-provider" % mavenVersion excludeAll(ExclusionRule("org.eclipse.aether")),
+    "org.codehaus.plexus" % "plexus-interpolation" % "1.22" excludeAll(ExclusionRule("*", "*")),
     "org.apache.maven" % "maven-model" % mavenVersion,
-    "org.glassfish.hk2.external" % "javax.inject" % "2.2.0-b14" % "provided",
-    "org.codehaus.plexus" % "plexus-component-annotations" % "1.5.5" % "provided",
+    //"org.glassfish.hk2.external" % "javax.inject" % "2.2.0-b14" % "provided",
+    //"org.codehaus.plexus" % "plexus-component-annotations" % "1.5.5" % "provided",
     "org.eclipse.aether" % "aether-impl" % aetherVersion,
     "org.eclipse.aether" % "aether-connector-basic" % aetherVersion,
     "org.eclipse.aether" % "aether-transport-http" % aetherVersion,
@@ -25,7 +22,16 @@ libraryDependencies <++= (target).apply{ (target) =>
   )
 }
 
+dependencyOverrides += "org.slf4j" % "jcl-over-slf4j" % "1.7.5"
+
+excludeDependencies += "com.google.guava" % "guava"
+excludeDependencies += "org.apache.commons" % "commons-lang3"
+excludeDependencies += "org.codehaus.plexus" % "plexus-component-annotations"
+excludeDependencies += "org.codehaus.plexus" % "plexus-utils"
+
 scalacOptions := Seq("-deprecation", "-unchecked")
+
+publishMavenStyle := false
 
 sbtPlugin := true
 
