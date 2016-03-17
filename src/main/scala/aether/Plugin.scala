@@ -37,7 +37,7 @@ object AetherPlugin extends AetherPlugin {
 
 
 trait AetherPlugin extends AutoPlugin {
-  
+
   lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
     aetherWagons := Seq.empty,
     aetherLocalRepo := Path.userHome / ".m2" / "repository",
@@ -46,7 +46,7 @@ trait AetherPlugin extends AutoPlugin {
     installTask,
     aetherPackageMain <<= Keys.`package` in Compile
   )
- 
+
 
   def defaultCoordinates = aetherCoordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaVersion, scalaBinaryVersion, sbtPlugin, crossVersion).apply{
      (o, artifact, v, sbtV, scalaV, scalaBinV, plugin, crossV) => {
@@ -56,14 +56,14 @@ trait AetherPlugin extends AutoPlugin {
     }
   }
 
-  def defaultArtifact = aetherArtifact <<= (aetherCoordinates, aetherPackageMain, makePom in Compile, packagedArtifacts in Compile) map {
-    (coords: MavenCoordinates, mainArtifact: File, pom: File, artifacts: Map[Artifact, File]) =>
-      createArtifact(artifacts, pom, coords, mainArtifact)
+  def defaultArtifact = aetherArtifact <<= (aetherCoordinates, aetherPackageMain, packagedArtifacts in Compile) map {
+    (coords: MavenCoordinates, mainArtifact: File, artifacts: Map[Artifact, File]) =>
+      createArtifact(artifacts, coords, mainArtifact)
   }
 
 
   lazy val deployTask = aetherDeploy <<= (publishTo, publishArtifact in Compile, sbtPlugin, aetherWagons, credentials, aetherArtifact, streams, aetherLocalRepo).map{
-    (repo: Option[Resolver], pubArt: Boolean, plugin: Boolean, wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams, localR: File) => 
+    (repo: Option[Resolver], pubArt: Boolean, plugin: Boolean, wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams, localR: File) =>
         if (pubArt) {
           deployIt(repo, localR, artifact, plugin, wag, cred)(s)
         }
@@ -74,7 +74,7 @@ trait AetherPlugin extends AutoPlugin {
       installIt(artifact, localR, plugin)(s)
     }}
 
-  def createArtifact(artifacts: Map[Artifact, sbt.File], pom: sbt.File, coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
+  def createArtifact(artifacts: Map[Artifact, sbt.File], coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
     val subArtifacts = artifacts
       .filterNot { case (a, f) => a.classifier.isEmpty && f == mainArtifact }
       .map { case (a, f) => AetherSubArtifact(f, a.classifier, a.extension) }
