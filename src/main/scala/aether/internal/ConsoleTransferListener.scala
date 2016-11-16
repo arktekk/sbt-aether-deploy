@@ -41,7 +41,7 @@ class ConsoleTransferListener(out: Logger) extends AbstractTransferListener {
     pad(buffer, padding)
     buffer.append('\r')
 
-    out.info(buffer.toString())
+    out.verbose(buffer.toString())
   }
 
   override def transferSucceeded(event: TransferEvent) {
