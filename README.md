@@ -5,13 +5,25 @@ Aether is the same library as maven itself uses, meaning that the same behaviour
 ## project/plugins.sbt
 
 ```scala
-...
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.17")
-...
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.18")
 ```
 
+# Possible Breaking Changes
+
+## 0.18
+
+The version to be used by the aetherCoordinates will be scoped using ThisBuild, to work better with the release plugin.
+
+To get the old behaviour you will need to add this to your `build.sbt`:
+ 
+```scala
+aetherOldVersionMethod := true
+```
+
+
 ## Caveat
-If you see errors similar to what is described in this ticket https://github.com/arktekk/sbt-aether-deploy/issues/25 then you might want to check if you are using a global plugin. 
+If you see errors similar to what is described in [this ticket](https://github.com/arktekk/sbt-aether-deploy/issues/25) 
+then you might want to check if you are using a global plugin. 
 
 There are known incompabilities with `sbt-pgp` if sbt-pgp is used as a global plugin.
 
@@ -19,11 +31,11 @@ There are known incompabilities with `sbt-pgp` if sbt-pgp is used as a global pl
 ## Build file
   
 ```scala
-publishTo <<= (version: String) {
-  if (version.endsWith("SNAPSHOT")) {
-    Some("Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
+publishTo := {
+  if ((version in ThisBuild).value.endsWith("SNAPSHOT")) {
+    Some(Opts.resolver.sonatypeSnapshots)
   } else {
-    Some("Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+    Some(Opts.resolver.sonatypeStaging)
   }
 }
 ```
