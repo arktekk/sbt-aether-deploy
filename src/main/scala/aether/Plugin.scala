@@ -1,14 +1,14 @@
 package aether
 
 import sbt._
-import Keys._
+import Keys.{version, _}
 import org.eclipse.aether.deployment.DeployRequest
 import org.eclipse.aether.installation.InstallRequest
 import org.eclipse.aether.repository.{Proxy, RemoteRepository}
 import java.net.URI
+
 import org.eclipse.aether.repository.RemoteRepository.Builder
 import org.eclipse.aether.util.repository.AuthenticationBuilder
-
 import internal._
 
 object AetherKeys {
@@ -19,6 +19,7 @@ object AetherKeys {
   val aetherPackageMain = taskKey[File]("package main Artifact")
   val aetherWagons = settingKey[Seq[WagonWrapper]]("The configured extra maven wagon wrappers.")
   val aetherLocalRepo = settingKey[File]("Local maven repository.")
+  val aetherOldVersionMethod = settingKey[Boolean]("Flag for using the old method of getting the version")
 }
 
 import AetherKeys._
@@ -26,11 +27,18 @@ import AetherKeys._
 object AetherPlugin extends AetherPlugin {
   override def trigger = allRequirements
   override def requires = sbt.plugins.IvyPlugin
-  override def projectSettings = aetherBaseSettings ++ Seq(defaultArtifact)
+  override def projectSettings = aetherBaseSettings ++ Seq(
+    aetherArtifact := {
+      createArtifact((packagedArtifacts in Compile).value, aetherCoordinates.value, aetherPackageMain.value)
+    }
+  )
 
   object autoImport {
-    def overridePublishSettings: Seq[Setting[_]] = Seq(publish <<= aetherDeploy)
-    def overridePublishLocalSettings: Seq[Setting[_]] = Seq(publishLocal <<= aetherInstall.dependsOn(publishLocal))
+    def overridePublishSettings: Seq[Setting[_]] = Seq(publish := aetherDeploy.value)
+    def overridePublishLocalSettings: Seq[Setting[_]] = Seq(publishLocal := {
+      publishLocal.value
+      aetherInstall.value
+    })
     def overridePublishBothSettings: Seq[Setting[_]] = overridePublishSettings ++ overridePublishLocalSettings
   }
 }
@@ -44,35 +52,31 @@ trait AetherPlugin extends AutoPlugin {
     defaultCoordinates,
     deployTask,
     installTask,
-    aetherPackageMain <<= Keys.`package` in Compile
+    aetherPackageMain := {
+      (Keys.`package` in Compile).value
+    },
+    aetherOldVersionMethod := false
   )
 
 
-  def defaultCoordinates = aetherCoordinates <<= (organization, artifact, version, sbtBinaryVersion, scalaVersion, scalaBinaryVersion, sbtPlugin, crossVersion).apply{
-     (o, artifact, v, sbtV, scalaV, scalaBinV, plugin, crossV) => {
-       val artifactId = if (!plugin) CrossVersion(crossV, scalaV, scalaBinV).map(_(artifact.name)) getOrElse artifact.name else artifact.name
-       val coords = MavenCoordinates(o, artifactId, v, None, artifact.extension)
-       if (plugin) coords.withSbtVersion(sbtV).withScalaVersion(scalaBinV) else coords
+  def defaultCoordinates = aetherCoordinates := {
+    val art = artifact.value
+    val theVersion = if (aetherOldVersionMethod.value) version.value else (version in ThisBuild).value
+
+    val artifactId = if (!sbtPlugin.value) CrossVersion(crossVersion.value, scalaVersion.value, scalaBinaryVersion.value).map(_(art.name)) getOrElse art.name else art.name
+    val coords = MavenCoordinates(organization.value, artifactId, theVersion, None, art.extension)
+    if (sbtPlugin.value) coords.withSbtVersion(sbtBinaryVersion.value).withScalaVersion(scalaBinaryVersion.value) else coords
+  }
+
+  lazy val deployTask = aetherDeploy := {
+    if ((publishArtifact in Compile).value) {
+      deployIt(publishTo.value, aetherLocalRepo.value, aetherArtifact.value, sbtPlugin.value, aetherWagons.value, credentials.value)(streams.value)
     }
   }
 
-  def defaultArtifact = aetherArtifact <<= (aetherCoordinates, aetherPackageMain, packagedArtifacts in Compile) map {
-    (coords: MavenCoordinates, mainArtifact: File, artifacts: Map[Artifact, File]) =>
-      createArtifact(artifacts, coords, mainArtifact)
+  lazy val installTask = aetherInstall := {
+    installIt(aetherArtifact.value, aetherLocalRepo.value, sbtPlugin.value)(streams.value)
   }
-
-
-  lazy val deployTask = aetherDeploy <<= (publishTo, publishArtifact in Compile, sbtPlugin, aetherWagons, credentials, aetherArtifact, streams, aetherLocalRepo).map{
-    (repo: Option[Resolver], pubArt: Boolean, plugin: Boolean, wag: Seq[WagonWrapper], cred: Seq[Credentials], artifact: AetherArtifact, s: TaskStreams, localR: File) =>
-        if (pubArt) {
-          deployIt(repo, localR, artifact, plugin, wag, cred)(s)
-        }
-    }
-
-  lazy val installTask = aetherInstall <<= (aetherArtifact, aetherLocalRepo, streams, sbtPlugin).map{
-    (artifact: AetherArtifact, localR: File, s: TaskStreams, plugin: Boolean) => {
-      installIt(artifact, localR, plugin)(s)
-    }}
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
     val subArtifacts = artifacts
