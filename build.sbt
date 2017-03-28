@@ -17,7 +17,7 @@ libraryDependencies ++= {
     "org.eclipse.aether"        % "aether-transport-file"         % aetherVersion,
     "org.eclipse.aether"        % "aether-transport-wagon"        % aetherVersion,
     "ch.qos.logback"            % "logback-classic"               % "1.0.13",
-    //"org.apache.httpcomponents" % "httpclient"                    % "4.5.3",
+    "org.apache.httpcomponents" % "httpclient"                    % "4.5.3",
     "javax.inject"              % "javax.inject"                  % "1"      % "provided",
     "org.codehaus.plexus"       % "plexus-component-annotations"  % "1.7.1"  % "provided"
   )
