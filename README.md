@@ -20,6 +20,15 @@ To get the old behaviour you will need to add this to your `build.sbt`:
 aetherOldVersionMethod := true
 ```
 
+Logging level of progress has been changed from info to debug.
+ 
+You can turn off the progress logging by adding this to your `build.sbt`:
+
+```scala
+import aether.AetherKeys._
+
+logLevel in aetherDeploy := Level.Info
+```
 
 ## Caveat
 If you see errors similar to what is described in [this ticket](https://github.com/arktekk/sbt-aether-deploy/issues/25) 

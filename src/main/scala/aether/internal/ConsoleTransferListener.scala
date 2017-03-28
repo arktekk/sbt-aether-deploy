@@ -7,11 +7,7 @@ import java.text.{DecimalFormatSymbols, DecimalFormat}
 import java.util.Locale
 import sbt.Logger
 
-/**
- * @author Erlend Hamnaberg<erlend.hamnaberg@arktekk.no>
- */
-
-class ConsoleTransferListener(out: Logger) extends AbstractTransferListener {
+class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
   private val downloads = new ConcurrentHashMap[TransferResource, Long]()
 
   private var lastLength: Int = 0
@@ -19,7 +15,7 @@ class ConsoleTransferListener(out: Logger) extends AbstractTransferListener {
   override def transferInitiated(event: TransferEvent) {
     val message = if (event.getRequestType == TransferEvent.RequestType.PUT) "Uploading" else "Downloading"
 
-    out.info(message + ": " + event.getResource.getRepositoryUrl + event.getResource.getResourceName)
+    logger.info(message + ": " + event.getResource.getRepositoryUrl + event.getResource.getResourceName)
   }
 
   override def transferProgressed(event: TransferEvent) {
@@ -41,7 +37,7 @@ class ConsoleTransferListener(out: Logger) extends AbstractTransferListener {
     pad(buffer, padding)
     buffer.append('\r')
 
-    out.info(buffer.toString())
+    logger.debug(buffer.toString())
   }
 
   override def transferSucceeded(event: TransferEvent) {
@@ -61,7 +57,7 @@ class ConsoleTransferListener(out: Logger) extends AbstractTransferListener {
         throughput = " at " + format.format(kbPerSec) + " KB/sec"
       }
 
-      out.info(t + ": " + resource.getRepositoryUrl + resource.getResourceName + " (" + len
+      logger.info(t + ": " + resource.getRepositoryUrl + resource.getResourceName + " (" + len
         + throughput + ")")
     }
   }
@@ -69,7 +65,7 @@ class ConsoleTransferListener(out: Logger) extends AbstractTransferListener {
   override def transferFailed(event: TransferEvent) {
     transferCompleted(event)
 
-    out.error(event.getException.getMessage)
+    logger.error(event.getException.getMessage)
   }
 
   private def transferCompleted(event: TransferEvent) {
@@ -78,11 +74,11 @@ class ConsoleTransferListener(out: Logger) extends AbstractTransferListener {
     val buffer = new StringBuilder(64)
     pad(buffer, lastLength)
     buffer.append('\r')
-    out.info(buffer.toString())
+    logger.info(buffer.toString())
   }
 
   override def transferCorrupted(event: TransferEvent) {
-    out.error(event.getException.getMessage)
+    logger.error(event.getException.getMessage)
   }
 
   private def pad(buffer: StringBuilder, spaces: Int) {

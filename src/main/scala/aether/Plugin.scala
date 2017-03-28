@@ -55,7 +55,8 @@ trait AetherPlugin extends AutoPlugin {
     aetherPackageMain := {
       (Keys.`package` in Compile).value
     },
-    aetherOldVersionMethod := false
+    aetherOldVersionMethod := false,
+    logLevel in aetherDeploy := Level.Debug
   )
 
 
