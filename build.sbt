@@ -8,8 +8,8 @@ libraryDependencies ++= {
   val mavenVersion = "3.3.9"
   val aetherVersion = "1.1.0"
   Seq(
-    "org.apache.maven"          % "maven-aether-provider"         % mavenVersion excludeAll(ExclusionRule("org.eclipse.aether")),
-    "org.codehaus.plexus"       % "plexus-interpolation"          % "1.22" excludeAll(ExclusionRule("*", "*")),
+    aetherExclude("org.apache.maven"          % "maven-aether-provider"         % mavenVersion),
+    "org.codehaus.plexus"       % "plexus-interpolation"          % "1.22",
     "org.apache.maven"          % "maven-model"                   % mavenVersion,
     "org.eclipse.aether"        % "aether-impl"                   % aetherVersion,
     "org.eclipse.aether"        % "aether-connector-basic"        % aetherVersion,
@@ -43,3 +43,8 @@ scriptedLaunchOpts := { scriptedLaunchOpts.value ++
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0" % "provided")
 
 scriptedBufferLog := false
+
+
+def aetherExclude(moduleId: ModuleID): ModuleID = {
+  List("aether-api", "aether-spi", "aether-util", "aether-impl").foldLeft(moduleId)((m, s) => m.exclude("org.eclipse.aether", s))
+}
