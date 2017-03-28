@@ -32,8 +32,6 @@ excludeDependencies += "org.codehaus.plexus" % "plexus-utils"
 
 scalacOptions := Seq("-deprecation", "-unchecked")
 
-publishMavenStyle := false
-
 sbtPlugin := true
 
 ScriptedPlugin.scriptedSettings
