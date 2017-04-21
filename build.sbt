@@ -28,7 +28,6 @@ dependencyOverrides += "org.slf4j" % "jcl-over-slf4j" % "1.7.5"
 excludeDependencies += "com.google.guava" % "guava"
 excludeDependencies += "org.apache.commons" % "commons-lang3"
 excludeDependencies += "org.codehaus.plexus" % "plexus-component-annotations"
-excludeDependencies += "org.codehaus.plexus" % "plexus-utils"
 
 scalacOptions := Seq("-deprecation", "-unchecked")
 
