@@ -16,18 +16,14 @@ libraryDependencies ++= {
     "org.eclipse.aether"        % "aether-transport-http"         % aetherVersion exclude("org.apache.httpcomponents", "httpclient"),
     "org.eclipse.aether"        % "aether-transport-file"         % aetherVersion,
     "org.eclipse.aether"        % "aether-transport-wagon"        % aetherVersion,
-    "ch.qos.logback"            % "logback-classic"               % "1.0.13",
-    "org.apache.httpcomponents" % "httpclient"                    % "4.5.3",
+    "ch.qos.logback"            % "logback-classic"               % "1.2.2",
+    "org.apache.httpcomponents" % "httpclient"                    % "4.5.3" exclude("commons-logging", "commons-logging"),
     "javax.inject"              % "javax.inject"                  % "1"      % "provided",
     "org.codehaus.plexus"       % "plexus-component-annotations"  % "1.7.1"  % "provided"
   )
 }
 
-dependencyOverrides += "org.slf4j" % "jcl-over-slf4j" % "1.7.5"
-
-excludeDependencies += "com.google.guava" % "guava"
-excludeDependencies += "org.apache.commons" % "commons-lang3"
-excludeDependencies += "org.codehaus.plexus" % "plexus-component-annotations"
+dependencyOverrides += "org.slf4j" % "jcl-over-slf4j" % "1.7.25"
 
 scalacOptions := Seq("-deprecation", "-unchecked")
 
