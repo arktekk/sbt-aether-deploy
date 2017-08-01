@@ -6,4 +6,4 @@ throw new RuntimeException("""
 
 addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % pluginVersion)
 
-libraryDependencies += "org.apache.maven.wagon" % "wagon-webdav-jackrabbit" % "2.2"
+libraryDependencies += "org.apache.maven.wagon" % "wagon-webdav-jackrabbit" % "2.12"
