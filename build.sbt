@@ -15,7 +15,8 @@ libraryDependencies ++= {
     "org.eclipse.aether"        % "aether-connector-basic"        % aetherVersion,
     "org.eclipse.aether"        % "aether-transport-http"         % aetherVersion exclude("org.apache.httpcomponents", "httpclient"),
     "org.eclipse.aether"        % "aether-transport-file"         % aetherVersion,
-    "org.eclipse.aether"        % "aether-transport-wagon"        % aetherVersion,
+    "org.eclipse.aether"        % "aether-transport-wagon"        % aetherVersion exclude("org.apache.maven.wagon", "wagon-provider-api"),
+    "org.apache.maven.wagon"    % "wagon-provider-api"            % "2.12",
     "ch.qos.logback"            % "logback-classic"               % "1.2.2",
     "org.apache.httpcomponents" % "httpclient"                    % "4.5.3" exclude("commons-logging", "commons-logging"),
     "javax.inject"              % "javax.inject"                  % "1"      % "provided",
@@ -35,10 +36,14 @@ scriptedLaunchOpts := { scriptedLaunchOpts.value ++
   Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + (version in ThisBuild).value)
 }
 
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0" % "provided")
-
 scriptedBufferLog := false
 
+
+libraryDependencies += {
+  val sbtV = (sbtBinaryVersion in pluginCrossBuild).value
+  val scalaV = (scalaBinaryVersion in pluginCrossBuild).value
+  sbt.Defaults.sbtPluginExtra("com.jsuereth" % "sbt-pgp" % "1.1.0-M1" % "provided", sbtV, scalaV)
+}
 
 def aetherExclude(moduleId: ModuleID): ModuleID = {
   List("aether-api", "aether-spi", "aether-util", "aether-impl").foldLeft(moduleId)((m, s) => m.exclude("org.eclipse.aether", s))

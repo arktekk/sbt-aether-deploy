@@ -69,11 +69,15 @@ trait AetherPlugin extends AutoPlugin {
     if (sbtPlugin.value) coords.withSbtVersion(sbtBinaryVersion.value).withScalaVersion(scalaBinaryVersion.value) else coords
   }
 
-  lazy val deployTask = aetherDeploy := {
+  lazy val deployTask = aetherDeploy := (Def.taskDyn{
     if ((publishArtifact in Compile).value) {
-      deployIt(publishTo.value, aetherLocalRepo.value, aetherArtifact.value, sbtPlugin.value, aetherWagons.value, credentials.value)(streams.value)
+      Def.task {
+        deployIt(publishTo.value, aetherLocalRepo.value, aetherArtifact.value, sbtPlugin.value, aetherWagons.value, credentials.value)(streams.value)
+      }
+    } else {
+      Def.task(())
     }
-  }
+  }).value
 
   lazy val installTask = aetherInstall := {
     installIt(aetherArtifact.value, aetherLocalRepo.value, sbtPlugin.value)(streams.value)
