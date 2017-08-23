@@ -5,7 +5,7 @@ Aether is the same library as maven itself uses, meaning that the same behaviour
 ## project/plugins.sbt
 
 ```scala
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.19.0")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.20.0")
 ```
 
 # Possible Breaking Changes
@@ -99,7 +99,7 @@ To deploy to local maven repository.
 
 Documentation for proxies can be found [here](http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html)
 
-# Using the plugin with sbt-pgp-plugin 1.0 or higher
+# Using the plugin with sbt-pgp-plugin 1.1.0-M1 or higher
 
 You will need to add the sbt-pgp-plugin as described [here](https://github.com/sbt/sbt-pgp).
 
