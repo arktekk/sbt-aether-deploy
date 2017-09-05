@@ -1,0 +1,8 @@
+# Deploy to file url
+> publish
+$ exists target/repo/deploy
+$ exists target/repo/deploy/packaged-app_2.12/maven-metadata.xml
+$ exists target/repo/deploy/packaged-app_2.12/0.1/
+$ exists target/repo/deploy/packaged-app_2.12/0.1/packaged-app_2.12-0.1.jar
+$ exists target/repo/deploy/packaged-app_2.12/0.1/packaged-app_2.12-0.1-dist.zip
+$ exists target/repo/deploy/packaged-app_2.12/0.1/packaged-app_2.12-0.1.pom
