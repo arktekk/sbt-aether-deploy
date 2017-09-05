@@ -13,7 +13,6 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.spi.locator.Service
-import org.eclipse.aether.transport.wagon.{WagonTransporterFactory, WagonConfigurator, WagonProvider}
 import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 
@@ -21,11 +20,9 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory
 import sbt.std.TaskStreams
 
 object Booter {
-  private def newRepositorySystem(wagons: Seq[WagonWrapper], plugin: Boolean): RepositorySystem = {
+  private def newRepositorySystem(plugin: Boolean): RepositorySystem = {
     val locator = new DefaultServiceLocator()
     locator.addService(classOf[RepositoryLayoutFactory], classOf[SbtPluginLayoutFactory])
-    locator.setServices(classOf[WagonProvider], new ExtraWagonProvider(wagons))
-    locator.setServices(classOf[WagonConfigurator], NoOpWagonConfigurator)
     locator.addService(classOf[VersionResolver], classOf[DefaultVersionResolver])
     locator.addService(classOf[VersionRangeResolver], classOf[DefaultVersionRangeResolver])
     locator.addService(classOf[ArtifactDescriptorReader], classOf[DefaultArtifactDescriptorReader])
@@ -50,8 +47,8 @@ object Booter {
     system
   }
 
-  def apply(localRepoDir: File, streams: TaskStreams[_], wagons: Seq[WagonWrapper] = Nil, plugin: Boolean = false): (RepositorySystem, RepositorySystemSession) = {
-    val system = newRepositorySystem(wagons, plugin)
+  def apply(localRepoDir: File, streams: TaskStreams[_], plugin: Boolean = false): (RepositorySystem, RepositorySystemSession) = {
+    val system = newRepositorySystem(plugin)
     system -> newSession(system, localRepoDir, streams)
   }
 
@@ -72,10 +69,9 @@ object Booter {
 
     val services = Seq(
       configure(new HttpTransporterFactory()),
-      configure(new WagonTransporterFactory()).setPriority(1000f),
       configure(new FileTransporterFactory()).setPriority(10000f)
     )
-      
+
     locator.setServices(classOf[TransporterFactory], services : _*)
   }
 }

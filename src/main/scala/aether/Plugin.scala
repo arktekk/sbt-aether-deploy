@@ -17,7 +17,6 @@ object AetherKeys {
   val aetherDeploy = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
   val aetherInstall = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
   val aetherPackageMain = taskKey[File]("package main Artifact")
-  val aetherWagons = settingKey[Seq[WagonWrapper]]("The configured extra maven wagon wrappers.")
   val aetherLocalRepo = settingKey[File]("Local maven repository.")
   val aetherOldVersionMethod = settingKey[Boolean]("Flag for using the old method of getting the version")
 }
@@ -47,7 +46,7 @@ object AetherPlugin extends AetherPlugin {
 trait AetherPlugin extends AutoPlugin {
 
   lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
-    aetherWagons := Seq.empty,
+    //aetherWagons := Seq.empty,
     aetherLocalRepo := Path.userHome / ".m2" / "repository",
     defaultCoordinates,
     deployTask,
@@ -72,7 +71,7 @@ trait AetherPlugin extends AutoPlugin {
   lazy val deployTask = aetherDeploy := (Def.taskDyn{
     if ((publishArtifact in Compile).value) {
       Def.task {
-        deployIt(publishTo.value, aetherLocalRepo.value, aetherArtifact.value, sbtPlugin.value, aetherWagons.value, credentials.value)(streams.value)
+        deployIt(publishTo.value, aetherLocalRepo.value, aetherArtifact.value, sbtPlugin.value, credentials.value)(streams.value)
       }
     } else {
       Def.task(())
@@ -102,7 +101,7 @@ trait AetherPlugin extends AutoPlugin {
     builder.build()
   }
 
-  def deployIt(repo: Option[Resolver], localRepo: File, artifact: AetherArtifact, plugin: Boolean, wagons: Seq[WagonWrapper], cred: Seq[Credentials])(implicit s: TaskStreams) {
+  def deployIt(repo: Option[Resolver], localRepo: File, artifact: AetherArtifact, plugin: Boolean, cred: Seq[Credentials])(implicit strem: TaskStreams) {
     val repository = repo.collect{
       case x: MavenRepository => x
       case x => sys.error("The configured repo MUST be a maven repo, but was: " + x)
@@ -112,7 +111,7 @@ trait AetherPlugin extends AutoPlugin {
       val href = URI.create(repository.root)
       val c = Credentials.forHost(cred, href.getHost)
       if (c.isEmpty && href.getHost != null) {
-         s.log.warn("No credentials supplied for %s".format(href.getHost))
+         strem.log.warn("No credentials supplied for %s".format(href.getHost))
       }
       c
     }
@@ -124,7 +123,7 @@ trait AetherPlugin extends AutoPlugin {
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
     try {
-      val (system, session) = Booter(localRepo, s, wagons, plugin)
+      val (system, session) = Booter(localRepo, strem, plugin)
       system.deploy(session, request)
     }
     catch {
@@ -140,7 +139,7 @@ trait AetherPlugin extends AutoPlugin {
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
     try {
-      val (system, session) = Booter(localRepo, streams, Nil, plugin)
+      val (system, session) = Booter(localRepo, streams, plugin)
       system.install(session, request)
     }
     catch {
