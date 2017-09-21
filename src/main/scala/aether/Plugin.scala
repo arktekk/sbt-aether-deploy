@@ -65,7 +65,7 @@ trait AetherPlugin extends AutoPlugin {
 
     val artifactId = if (!sbtPlugin.value) CrossVersion(crossVersion.value, scalaVersion.value, scalaBinaryVersion.value).map(_(art.name)) getOrElse art.name else art.name
     val coords = MavenCoordinates(organization.value, artifactId, theVersion, None, art.extension)
-    if (sbtPlugin.value) coords.withSbtVersion(sbtBinaryVersion.value).withScalaVersion(scalaBinaryVersion.value) else coords
+    if (sbtPlugin.value) coords.withSbtVersion((sbtBinaryVersion in pluginCrossBuild).value).withScalaVersion(scalaBinaryVersion.value) else coords
   }
 
   lazy val deployTask = aetherDeploy := (Def.taskDyn{
