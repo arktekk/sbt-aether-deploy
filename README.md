@@ -5,7 +5,7 @@ Aether is the same library as maven itself uses, meaning that the same behaviour
 ## project/plugins.sbt
 
 ```scala
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.20.0")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.21")
 ```
 
 # Possible Breaking Changes
