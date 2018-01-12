@@ -10,7 +10,7 @@ libraryDependencies ++= {
   Seq(
     "javax.inject"              % "javax.inject"                  % "1"      % "provided",
     "org.codehaus.plexus"       % "plexus-component-annotations"  % "1.7.1"  % "provided",
-  "org.sonatype.plexus"       % "plexus-sec-dispatcher"         % "1.4" exclude("org.codehaus.plexus", "plexus-utils"),
+    "org.sonatype.plexus"       % "plexus-sec-dispatcher"         % "1.4" exclude("org.codehaus.plexus", "plexus-utils"),
     "com.google.inject"         % "guice"                         % "4.0" exclude("com.google.guava", "guava"),
     "org.apache.maven"          % "maven-resolver-provider"       % mavenVersion,
     "org.codehaus.plexus"       % "plexus-interpolation"          % "1.24",
