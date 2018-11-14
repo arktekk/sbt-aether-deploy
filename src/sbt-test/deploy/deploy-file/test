@@ -1,5 +1,5 @@
 # Deploy to file url
-> aether-deploy
+> aetherDeploy
 $ exists target/repo/deploy-file
 $ exists target/repo/deploy-file/deploy-file_2.9.1/maven-metadata.xml
 $ exists target/repo/deploy-file/deploy-file_2.9.1/0.1/
