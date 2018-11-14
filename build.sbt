@@ -8,27 +8,32 @@ libraryDependencies ++= {
   val mavenVersion = "3.5.0"
   val mavenResolverVersion = "1.1.1"
   Seq(
-    "javax.inject"              % "javax.inject"                  % "1"      % "provided",
-    "org.codehaus.plexus"       % "plexus-component-annotations"  % "1.7.1"  % "provided",
-    "org.sonatype.plexus"       % "plexus-sec-dispatcher"         % "1.4" exclude("org.codehaus.plexus", "plexus-utils"),
-    "com.google.inject"         % "guice"                         % "4.0" exclude("com.google.guava", "guava"),
     "org.apache.maven"          % "maven-resolver-provider"       % mavenVersion,
-    "org.codehaus.plexus"       % "plexus-interpolation"          % "1.24",
-    "org.apache.maven"          % "maven-model"                   % mavenVersion,
-    "org.apache.maven"          % "maven-core"                    % mavenVersion,
+    "org.apache.maven.resolver" % "maven-resolver-api"            % mavenResolverVersion,
+    "org.apache.maven.resolver" % "maven-resolver-impl"           % mavenResolverVersion,
     "org.apache.maven.resolver" % "maven-resolver-transport-file" % mavenResolverVersion,
     "org.apache.maven.resolver" % "maven-resolver-connector-basic"% mavenResolverVersion,
     "org.apache.maven.resolver" % "maven-resolver-transport-http" % mavenResolverVersion,
     "org.apache.maven.resolver" % "maven-resolver-transport-file" % mavenResolverVersion,
-    "org.apache.maven.wagon"    % "wagon-provider-api"            % "2.12",
-    "ch.qos.logback"            % "logback-classic"               % "1.2.2",
-    "commons-logging"           % "commons-logging"               % "1.2"
   )
 }
+
+//sbt-version specific dependencies
+libraryDependencies ++= (CrossVersion partialVersion (sbtVersion in pluginCrossBuild).value match {
+  case Some((0, 13)) => Seq(
+    //sbt 0.13.x requires that an slf4j backend be present on the classpath.
+    // This just directs all the basic logging stuff to a simple provider
+    "org.slf4j" % "slf4j-simple" % "1.7.25"
+  )
+  case _ =>
+    //sbt 1.0.0 and above provide an slf4j backend at runtime
+    Seq.empty
+})
 
 scalacOptions := Seq("-deprecation", "-unchecked")
 
 enablePlugins(SbtPlugin)
+crossSbtVersions := Seq("1.2.6", "0.13.17")
 
 scriptedLaunchOpts := { scriptedLaunchOpts.value ++
   Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + (version in ThisBuild).value)
@@ -40,5 +45,5 @@ scriptedBufferLog := false
 libraryDependencies += {
   val sbtV = (sbtBinaryVersion in pluginCrossBuild).value
   val scalaV = (scalaBinaryVersion in pluginCrossBuild).value
-  sbt.Defaults.sbtPluginExtra("com.jsuereth" % "sbt-pgp" % "1.1.0" % "provided", sbtV, scalaV)
+  sbt.Defaults.sbtPluginExtra("com.jsuereth" % "sbt-pgp" % "1.1.2-1" % "provided", sbtV, scalaV)
 }
