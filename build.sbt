@@ -28,9 +28,7 @@ libraryDependencies ++= {
 
 scalacOptions := Seq("-deprecation", "-unchecked")
 
-sbtPlugin := true
-
-ScriptedPlugin.scriptedSettings
+enablePlugins(SbtPlugin)
 
 scriptedLaunchOpts := { scriptedLaunchOpts.value ++
   Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + (version in ThisBuild).value)
