@@ -6,7 +6,7 @@ organization := "two-ten"
 
 scalaVersion := "2.10.0"
 
-publishTo  := Some("Nexus" at "http://localhost:8081/repository/maven-releases/")
+publishTo  := Some("Nexus" at "http://localhost:19999/repository/maven-releases/")
 
 overridePublishSettings
 

@@ -1,3 +1,5 @@
 # Deploy to file url
+$ exec docker run -d --rm -p 19999:8081 --name nexus sonatype/nexus3
+$ exec ./wait-until-running.sh
 > publish
-
+$ exec docker stop nexus
