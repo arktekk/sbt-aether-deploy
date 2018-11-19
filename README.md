@@ -1,6 +1,7 @@
 # SBT aether deploy plugin
-Deploys sbt-artifacts using Eclipse aether. 
-Aether is the same library as maven itself uses, meaning that the same behaviour should be expected.
+Deploys sbt-artifacts using Maven Artifact Provider. 
+
+The same behaviour as Maven should be expected.
 
 ## project/plugins.sbt
 
@@ -79,11 +80,11 @@ credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
 
 To deploy to remote Maven repository.
 
-    sbt aether-deploy
+    sbt aetherDeploy
 
 To deploy to local maven repository.
 
-    sbt aether-install
+    sbt aetherInstall
 
 # Usage if the publish/publish-local task is overriden
 
@@ -93,13 +94,13 @@ To deploy to remote Maven repository.
 
 To deploy to local maven repository.
 
-    sbt publish-local
+    sbt publishLocal
 
 # Proxies
 
 Documentation for proxies can be found [here](http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html)
 
-# Using the plugin with sbt-pgp-plugin 1.1.0 or higher
+# Using the plugin with sbt-pgp-plugin 1.1.2-1 or higher
 
 You will need to add the sbt-pgp-plugin as described [here](https://github.com/sbt/sbt-pgp).
 
@@ -117,6 +118,7 @@ This should now allow aether-deploy task to work with the sbt-pgp-plugin
 ```scala
 overridePublishSignedSettings
 ```
+
 ## Overriding the publish-signed-local task
 
 ```scala
