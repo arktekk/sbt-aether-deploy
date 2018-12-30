@@ -15,6 +15,7 @@ libraryDependencies ++= {
     "org.apache.maven.resolver" % "maven-resolver-connector-basic"% mavenResolverVersion,
     "org.apache.maven.resolver" % "maven-resolver-transport-http" % mavenResolverVersion,
     "org.apache.maven.resolver" % "maven-resolver-transport-file" % mavenResolverVersion,
+    "commons-logging"           % "commons-logging"               % "1.2"
   )
 }
 
