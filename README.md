@@ -6,7 +6,7 @@ The same behaviour as Maven should be expected.
 ## project/plugins.sbt
 
 ```scala
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.22.0")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.22.1")
 ```
 
 # Possible Breaking Changes
