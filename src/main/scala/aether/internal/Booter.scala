@@ -12,7 +12,6 @@ import org.eclipse.aether.repository.{ProxySelector, LocalRepository}
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
-import org.eclipse.aether.spi.locator.Service
 import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 
@@ -62,14 +61,9 @@ object Booter {
   }
 
   private def addTransporterFactories(locator: DefaultServiceLocator) {
-    def configure[A <: TransporterFactory with Service](in: A): A = {
-      in.initService(locator)
-      in
-    }
-
     val services = Seq(
-      configure(new HttpTransporterFactory()),
-      configure(new FileTransporterFactory()).setPriority(10000f)
+      new HttpTransporterFactory(),
+      new FileTransporterFactory().setPriority(10000f)
     )
 
     locator.setServices(classOf[TransporterFactory], services : _*)

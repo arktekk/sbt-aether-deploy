@@ -5,8 +5,8 @@ description := "Deploy in SBT using Sonatype Aether"
 name := "aether-deploy"
 
 libraryDependencies ++= {
-  val mavenVersion = "3.5.0"
-  val mavenResolverVersion = "1.1.1"
+  val mavenVersion = "3.6.0"
+  val mavenResolverVersion = "1.3.1"
   Seq(
     "org.apache.maven"          % "maven-resolver-provider"       % mavenVersion,
     "org.apache.maven.resolver" % "maven-resolver-api"            % mavenResolverVersion,
@@ -33,5 +33,5 @@ scriptedBufferLog := false
 libraryDependencies += {
   val sbtV = (sbtBinaryVersion in pluginCrossBuild).value
   val scalaV = (scalaBinaryVersion in pluginCrossBuild).value
-  sbt.Defaults.sbtPluginExtra("com.jsuereth" % "sbt-pgp" % "1.1.2-1" % "provided", sbtV, scalaV)
+  sbt.Defaults.sbtPluginExtra("com.jsuereth" % "sbt-pgp" % "2.0.0-M2" % "provided", sbtV, scalaV)
 }
