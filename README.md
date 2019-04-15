@@ -9,6 +9,20 @@ The same behaviour as Maven should be expected.
 addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.22.1")
 ```
 
+## Setting your version
+
+Update your version in `build.sbt`:
+
+```
+(version in ThisBuild) := //your version
+```
+
+and verify with:
+
+```
+sbt aetherCoordinates
+``
+
 # Possible Breaking Changes
 
 ## 0.18
