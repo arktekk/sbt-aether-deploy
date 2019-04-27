@@ -11,10 +11,14 @@ import org.eclipse.aether.artifact.Artifact
 
 import java.net.URI
 
+import scala.collection.JavaConverters.mapAsScalaMap
+
 class SbtPluginLayoutFactory extends RepositoryLayoutFactory {
   def newInstance(session: RepositorySystemSession, repository: RemoteRepository): RepositoryLayout = {
-    repository.getContentType match {
-      case "sbt-plugin" => SbtRepositoryLayout
+    import MavenCoordinates._
+    val userProperties = mapAsScalaMap(session.getUserProperties)
+    (repository.getContentType, userProperties.get(SbtVersion), userProperties.get(ScalaVersion)) match {
+      case ("sbt-plugin", Some(sbtVersion), Some(scalaVersion)) => new SbtRepositoryLayout(sbtVersion, scalaVersion)
       case _ => throw new NoRepositoryLayoutException(repository, "Not an sbt-plugin repository")
     }
   }
@@ -22,12 +26,9 @@ class SbtPluginLayoutFactory extends RepositoryLayoutFactory {
   def getPriority: Float = 100.0f
 }
 
-object SbtRepositoryLayout extends RepositoryLayout {
+class SbtRepositoryLayout(sbtVersion: String, scalaVersion: String) extends RepositoryLayout {
 
   def getLocation(artifact: Artifact, upload: Boolean): URI = {
-    import MavenCoordinates._
-    val sbtVersion = artifact.getProperties.get(SbtVersion)
-    val scalaVersion = artifact.getProperties.get(ScalaVersion)
     val path = new StringBuilder(128)
     path.append(artifact.getGroupId.replace('.', '/')).append('/')
     path.append(artifact.getArtifactId).append('_').append(scalaVersion).append('_').append(sbtVersion).append('/')
@@ -42,7 +43,18 @@ object SbtRepositoryLayout extends RepositoryLayout {
     URI.create(path.toString())
   }
 
-  def getLocation(metadata: Metadata, upload: Boolean): URI = null
+  def getLocation(metadata: Metadata, upload: Boolean): URI = {
+    val path = new StringBuilder(128)
+    if (metadata.getGroupId.nonEmpty) {
+      path.append(metadata.getGroupId.replace('.', '/')).append('/')
+      if (metadata.getArtifactId.nonEmpty) {
+        path.append(metadata.getArtifactId).append('_').append(scalaVersion).append('_').append(sbtVersion).append('/')
+        if (metadata.getVersion.nonEmpty) path.append(metadata.getVersion).append('/')
+      }
+    }
+    path.append(metadata.getType)
+    URI.create(path.toString())
+  }
 
   def getChecksums(artifact: Artifact, upload: Boolean, location: URI): java.util.List[Checksum] = {
     java.util.Arrays.asList(Checksum.forLocation(location, "SHA-1"), Checksum.forLocation(location, "MD5"))
