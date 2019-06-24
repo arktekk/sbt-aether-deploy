@@ -1,6 +1,7 @@
 # Deploy to file url
 > publish
 $ exists target/repo/sbt-plugin
+$ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/maven-metadata.xml
 $ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/
 $ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1.jar
 $ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1.pom

@@ -79,7 +79,7 @@ trait AetherPlugin extends AutoPlugin {
   }.value
 
   lazy val installTask = aetherInstall := {
-    installIt(aetherArtifact.value, aetherLocalRepo.value, sbtPlugin.value)(streams.value)
+    installIt(aetherArtifact.value, aetherLocalRepo.value)(streams.value)
   }
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
@@ -123,7 +123,7 @@ trait AetherPlugin extends AutoPlugin {
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
     try {
-      val (system, session) = Booter(localRepo, strem, plugin)
+      val (system, session) = Booter(localRepo, strem, artifact.coordinates)
       system.deploy(session, request)
     }
     catch {
@@ -131,7 +131,7 @@ trait AetherPlugin extends AutoPlugin {
     }
   }
 
-  def installIt(artifact: AetherArtifact, localRepo: File, plugin: Boolean)(implicit streams: TaskStreams) {
+  def installIt(artifact: AetherArtifact, localRepo: File)(implicit streams: TaskStreams) {
 
     val request = new InstallRequest()
     val parent = artifact.toArtifact
@@ -139,7 +139,7 @@ trait AetherPlugin extends AutoPlugin {
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
     try {
-      val (system, session) = Booter(localRepo, streams, plugin)
+      val (system, session) = Booter(localRepo, streams, artifact.coordinates)
       system.install(session, request)
     }
     catch {

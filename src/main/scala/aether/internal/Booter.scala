@@ -15,11 +15,12 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 
+import scala.collection.JavaConverters.mapAsJavaMap
 
 import sbt.std.TaskStreams
 
 object Booter {
-  private def newRepositorySystem(plugin: Boolean): RepositorySystem = {
+  private def newRepositorySystem(): RepositorySystem = {
     val locator = new DefaultServiceLocator()
     locator.addService(classOf[RepositoryLayoutFactory], classOf[SbtPluginLayoutFactory])
     locator.addService(classOf[VersionResolver], classOf[DefaultVersionResolver])
@@ -27,10 +28,8 @@ object Booter {
     locator.addService(classOf[ArtifactDescriptorReader], classOf[DefaultArtifactDescriptorReader])
     locator.addService(classOf[RepositoryConnectorFactory], classOf[org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory])
     locator.setServices(classOf[ProxySelector], SystemPropertyProxySelector())
-    if (!plugin) {
-      locator.addService(classOf[MetadataGeneratorFactory], classOf[SnapshotMetadataGeneratorFactory])
-      locator.addService(classOf[MetadataGeneratorFactory], classOf[VersionsMetadataGeneratorFactory])
-    }
+    locator.addService(classOf[MetadataGeneratorFactory], classOf[SnapshotMetadataGeneratorFactory])
+    locator.addService(classOf[MetadataGeneratorFactory], classOf[VersionsMetadataGeneratorFactory])
 
     addTransporterFactories(locator)
 
@@ -46,17 +45,18 @@ object Booter {
     system
   }
 
-  def apply(localRepoDir: File, streams: TaskStreams[_], plugin: Boolean = false): (RepositorySystem, RepositorySystemSession) = {
-    val system = newRepositorySystem(plugin)
-    system -> newSession(system, localRepoDir, streams)
+  def apply(localRepoDir: File, streams: TaskStreams[_], coordinates: MavenCoordinates): (RepositorySystem, RepositorySystemSession) = {
+    val system = newRepositorySystem()
+    system -> newSession(system, localRepoDir, streams, coordinates)
   }
 
-  private def newSession(implicit system: RepositorySystem, localRepoDir: File, streams: TaskStreams[_]): RepositorySystemSession = {
+  private def newSession(implicit system: RepositorySystem, localRepoDir: File, streams: TaskStreams[_], coordinates: MavenCoordinates): RepositorySystemSession = {
     val session = new DefaultRepositorySystemSession()
     val localRepo = new LocalRepository(localRepoDir)
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo))
     session.setTransferListener(new ConsoleTransferListener(streams.log))
     session.setRepositoryListener(new ConsoleRepositoryListener(streams.log))
+    session.setUserProperties(mapAsJavaMap(coordinates.props))
     session
   }
 
