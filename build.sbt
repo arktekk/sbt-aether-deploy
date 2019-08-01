@@ -5,8 +5,8 @@ description := "Deploy in SBT using Sonatype Aether"
 name := "aether-deploy"
 
 libraryDependencies ++= {
-  val mavenVersion = "3.6.0"
-  val mavenResolverVersion = "1.3.1"
+  val mavenVersion = "3.6.1"
+  val mavenResolverVersion = "1.4.0"
   Seq(
     "org.apache.maven"          % "maven-resolver-provider"       % mavenVersion,
     "org.apache.maven.resolver" % "maven-resolver-api"            % mavenResolverVersion,
