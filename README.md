@@ -9,7 +9,10 @@ The same behaviour as Maven should be expected.
 addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.23.0")
 ```
 
-# Possible Breaking Changes
+# Breaking Changes
+
+## 0.24.0
+If you want to use `sbt-pgp` you need to use version `2.0.1` or higher.
 
 ## 0.18
 

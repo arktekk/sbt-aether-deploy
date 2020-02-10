@@ -1,11 +1,11 @@
 package aether
 
-import com.typesafe.sbt.pgp.PgpKeys
+import com.jsuereth.sbtpgp.PgpKeys
 import sbt._, Keys._
 import AetherKeys._
 
 object SignedAetherPlugin extends AetherPlugin {
-  override def trigger = noTrigger
+  override def trigger  = noTrigger
   override def requires = sbt.plugins.IvyPlugin
   override def projectSettings = aetherBaseSettings ++ Seq(
     aetherArtifact := {
@@ -15,12 +15,12 @@ object SignedAetherPlugin extends AetherPlugin {
 
   object autoImport {
     def overridePublishSignedSettings: Seq[Setting[_]] = Seq(PgpKeys.publishSigned := aetherDeploy.value)
-    def overridePublishSignedLocalSettings: Seq[Setting[_]] = Seq(PgpKeys.publishLocalSigned := {
-      aetherInstall.value
-      PgpKeys.publishLocalSigned.value
-    })
+    def overridePublishSignedLocalSettings: Seq[Setting[_]] =
+      Seq(PgpKeys.publishLocalSigned := {
+        aetherInstall.value
+        PgpKeys.publishLocalSigned.value
+      })
     def overridePublishSignedBothSettings: Seq[Setting[_]] = overridePublishSignedSettings ++ overridePublishSignedLocalSettings
   }
 
-
-  }
+}

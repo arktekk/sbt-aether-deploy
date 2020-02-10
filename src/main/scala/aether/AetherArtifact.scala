@@ -4,11 +4,18 @@ import java.io.File
 import org.eclipse.aether.util.artifact.SubArtifact
 import org.eclipse.aether.artifact.DefaultArtifact
 
-case class MavenCoordinates(groupId: String, artifactId: String, version: String, classifier: Option[String], extension: String = "jar", props: Map[String, String] = Map.empty) {
+case class MavenCoordinates(
+    groupId: String,
+    artifactId: String,
+    version: String,
+    classifier: Option[String],
+    extension: String = "jar",
+    props: Map[String, String] = Map.empty
+) {
   def coordinates = "%s:%s:%s%s:%s".format(groupId, artifactId, extension, classifier.map(_ + ":").getOrElse(""), version)
 
   def withScalaVersion(v: String) = withProp(MavenCoordinates.ScalaVersion, v)
-  def withSbtVersion(v: String) = withProp(MavenCoordinates.SbtVersion, v)
+  def withSbtVersion(v: String)   = withProp(MavenCoordinates.SbtVersion, v)
   def withExtension(file: File) = {
     val ext = {
       val i = file.getName.lastIndexOf(".")
@@ -22,7 +29,7 @@ case class MavenCoordinates(groupId: String, artifactId: String, version: String
 
 object MavenCoordinates {
   val ScalaVersion = "scala-version"
-  val SbtVersion = "sbt-version"
+  val SbtVersion   = "sbt-version"
 
   def apply(coords: String): Option[MavenCoordinates] = coords.split(":") match {
     case Array(groupId, artifactId, extension, v) =>

@@ -1,7 +1,7 @@
 package aether
 package internal
 
-import org.eclipse.aether.{RepositoryEvent, AbstractRepositoryListener}
+import org.eclipse.aether.{AbstractRepositoryListener, RepositoryEvent}
 import sbt.Logger
 
 class ConsoleRepositoryListener(logger: Logger) extends AbstractRepositoryListener {
@@ -14,8 +14,10 @@ class ConsoleRepositoryListener(logger: Logger) extends AbstractRepositoryListen
   }
 
   override def artifactDescriptorInvalid(event: RepositoryEvent) {
-    logger.info("Invalid artifact descriptor for " + event.getArtifact + ": "
-      + event.getException.getMessage)
+    logger.info(
+      "Invalid artifact descriptor for " + event.getArtifact + ": "
+        + event.getException.getMessage
+    )
   }
 
   override def artifactDescriptorMissing(event: RepositoryEvent) {

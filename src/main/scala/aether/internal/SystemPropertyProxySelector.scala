@@ -12,19 +12,21 @@ import java.net.URI
 private[aether] object SystemPropertyProxySelector {
   lazy val selector = {
     val selector = new DefaultProxySelector
-    loadProxies().foreach( p => {
+    loadProxies().foreach(p => {
       val nonProxyHosts = envOrProp("http.nonProxyHosts")
       // SBT doesn't set the http.nonProxyHosts property, so we'll
       // have to do it.
       // no_proxy is one the form "example.com,.example.org" which is
       // equivalient Java's to "example.com|*.example.org"
       val no_proxy = envOrProp("no_proxy").map(np => {
-        np.split(",").map(p => {
-          if(p.startsWith("."))
-            "*." + p.substring(1)
-          else
-            p
-        }).mkString("|")
+        np.split(",")
+          .map(p => {
+            if (p.startsWith("."))
+              "*." + p.substring(1)
+            else
+              p
+          })
+          .mkString("|")
       })
       selector.add(p, nonProxyHosts.orElse(no_proxy).orNull)
     })
@@ -33,30 +35,34 @@ private[aether] object SystemPropertyProxySelector {
 
   def apply(): ProxySelector = selector
 
-
   /**
-   * java -Dhttp.proxyHost=myproxy -Dhttp.proxyPort=8080 \
-   *      -Dhttp.proxyUser=username -Dhttp.proxyPassword=mypassword \
-   *      -Dhttp.nonProxyHosts=
-   * @return
-   */
+    * java -Dhttp.proxyHost=myproxy -Dhttp.proxyPort=8080 \
+    *      -Dhttp.proxyUser=username -Dhttp.proxyPassword=mypassword \
+    *      -Dhttp.nonProxyHosts=
+    * @return
+    */
   private def loadProxies(): Option[AProxy] = {
     val auth = envOrProp("http.proxyUser") -> envOrProp("http.proxyPassword") match {
       case (Some(u), Some(p)) => new AuthenticationBuilder().addUsername(u).addPassword(p).build()
-      case _ => null
+      case _                  => null
     }
 
-    val env = envOrProp("http_proxy").map(URI.create).map(uri => {
-      val port = uri.getScheme -> uri.getPort match {
-        case ("http", -1) => 80
-        case ("https", -1) => 443
-        case (_, p) => p
-      }
-      new AProxy(uri.getScheme, uri.getHost, port, auth)
-    })
+    val env = envOrProp("http_proxy")
+      .map(URI.create)
+      .map(uri => {
+        val port = uri.getScheme -> uri.getPort match {
+          case ("http", -1)  => 80
+          case ("https", -1) => 443
+          case (_, p)        => p
+        }
+        new AProxy(uri.getScheme, uri.getHost, port, auth)
+      })
 
-    val http = envOrProp("http.proxyHost").map(host => new AProxy("http", host, envOrProp("http.proxyPort").getOrElse("80").toInt, auth))
-    val https = envOrProp("https.proxyHost").map(host => new AProxy("https", host, envOrProp("https.proxyPort").getOrElse("443").toInt, auth))
+    val http =
+      envOrProp("http.proxyHost").map(host => new AProxy("http", host, envOrProp("http.proxyPort").getOrElse("80").toInt, auth))
+    val https = envOrProp("https.proxyHost").map(host =>
+      new AProxy("https", host, envOrProp("https.proxyPort").getOrElse("443").toInt, auth)
+    )
 
     env.orElse(http).orElse(https)
   }

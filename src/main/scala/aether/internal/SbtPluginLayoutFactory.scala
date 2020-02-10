@@ -19,7 +19,7 @@ class SbtPluginLayoutFactory extends RepositoryLayoutFactory {
     val userProperties = mapAsScalaMap(session.getUserProperties)
     (repository.getContentType, userProperties.get(SbtVersion), userProperties.get(ScalaVersion)) match {
       case ("sbt-plugin", Some(sbtVersion), Some(scalaVersion)) => new SbtRepositoryLayout(sbtVersion, scalaVersion)
-      case _ => throw new NoRepositoryLayoutException(repository, "Not an sbt-plugin repository")
+      case _                                                    => throw new NoRepositoryLayoutException(repository, "Not an sbt-plugin repository")
     }
   }
 
@@ -60,5 +60,6 @@ class SbtRepositoryLayout(sbtVersion: String, scalaVersion: String) extends Repo
     java.util.Arrays.asList(Checksum.forLocation(location, "SHA-1"), Checksum.forLocation(location, "MD5"))
   }
 
-  def getChecksums(metadata: Metadata, upload: Boolean, location: URI): java.util.List[Checksum] = java.util.Collections.emptyList()
+  def getChecksums(metadata: Metadata, upload: Boolean, location: URI): java.util.List[Checksum] =
+    java.util.Collections.emptyList()
 }

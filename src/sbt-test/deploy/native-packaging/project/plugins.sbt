@@ -6,4 +6,4 @@ val pluginVersion = scala.util.Properties.propOrNone("plugin.version").getOrElse
 
 addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % pluginVersion)
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.2.2")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.6.1")
