@@ -1,16 +1,15 @@
 package aether
 
-import com.jsuereth.sbtpgp.PgpKeys
-import sbt._, Keys._
-import AetherKeys._
+import aether.AetherKeys._
+import com.jsuereth.sbtpgp.{PgpKeys, SbtPgp}
+import sbt._
 
-@deprecated(message = "Will be a separate plugin in a future release", since = "0.24.1")
-object SignedAetherPlugin extends AetherPlugin {
-  override def trigger  = noTrigger
-  override def requires = sbt.plugins.IvyPlugin
-  override def projectSettings = aetherBaseSettings ++ Seq(
+object SignedAetherPlugin extends AutoPlugin {
+  override def trigger  = allRequirements
+  override def requires = AetherPlugin && SbtPgp
+  override def projectSettings = Seq(
     aetherArtifact := {
-      createArtifact((PgpKeys.signedArtifacts in Compile).value, aetherCoordinates.value, aetherPackageMain.value)
+      AetherPlugin.createArtifact((PgpKeys.signedArtifacts in Compile).value, aetherCoordinates.value, aetherPackageMain.value)
     }
   )
 

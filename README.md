@@ -6,10 +6,18 @@ The same behaviour as Maven should be expected.
 ## project/plugins.sbt
 
 ```scala
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.23.0")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.25.0")
+
+/** OR **/
+
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.25.0") // For sbt-pgp 2.x support
 ```
 
 # Breaking Changes
+
+## 0.25.0
+`sbt-pgp` support now published separately, and requires `aether-deploy-signed` dependency declaration instead of
+`aether-deploy` to support zero configuration use of `SignedAetherPlugin`.
 
 ## 0.24.0
 If you want to use `sbt-pgp` you need to use version `2.0.1` or higher.
@@ -72,6 +80,23 @@ overridePublishLocalSettings
 ```scala
 overridePublishBothSettings
 ```
+## Overriding the publish-signed task _(applies to 'aether-deploy-signed' only)_
+
+```scala
+overridePublishSignedSettings
+```
+
+## Overriding the publish-signed-local task _(applies to 'aether-deploy-signed' only)_
+
+```scala
+overridePublishSignedLocalSettings
+```
+
+## Overriding the publish-signed and publish-signed-local task _(applies to 'aether-deploy-signed' only)_
+
+```scala
+overridePublishSignedBothSettings
+```
 
 ## Add credentials
 
@@ -103,33 +128,16 @@ To deploy to local maven repository.
 
 Documentation for proxies can be found [here](http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html)
 
-# Using the plugin with sbt-pgp-plugin 1.1.2-1 or higher
+# Using the plugin with sbt-pgp-plugin 1.1.2-1 or higher and aether-deploy 0.24.0 or below
 
 You will need to add the sbt-pgp-plugin as described [here](https://github.com/sbt/sbt-pgp).
 
 ```scala
-enablePlugins(SignedAetherPlugin)
+enablePlugins(SignedAetherPlugin) // Only required for 0.24.0 and below. SignedAetherPlugin is
+                                  // automatically enabled if sbt-pgp is enabled on the project.
 
-disablePlugins(AetherPlugin)
+disablePlugins(AetherPlugin) // Only required for 0.24.0 and below.
 
 ```
 
 This should now allow aether-deploy task to work with the sbt-pgp-plugin
-
-## Overriding the publish-signed task
-
-```scala
-overridePublishSignedSettings
-```
-
-## Overriding the publish-signed-local task
-
-```scala
-overridePublishSignedLocalSettings
-```
-
-## Overriding the publish-signed and publish-signed-local task
-
-```scala
-overridePublishSignedBothSettings
-```

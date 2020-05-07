@@ -1,4 +1,4 @@
-packageOptions += {
+ThisBuild / packageOptions += {
   val title  = name.value
   val ver    = version.value
   val vendor = organization.value
@@ -17,13 +17,13 @@ packageOptions += {
   )
 }
 
-credentials += Credentials(Path.userHome / ".sbt" / "arktekk-credentials")
+ThisBuild / credentials += Credentials(Path.userHome / ".sbt" / "arktekk-credentials")
 
-pomIncludeRepository := { x =>
+ThisBuild / pomIncludeRepository := { x =>
   false
 }
 
-publishTo := {
+ThisBuild / publishTo := {
   if (version.value.trim().endsWith("SNAPSHOT")) {
     Some(Opts.resolver.sonatypeSnapshots)
   } else {
@@ -32,13 +32,13 @@ publishTo := {
 }
 
 // Things we care about primarily because Maven Central demands them
-homepage := Some(new URL("http://github.com/arktekk/sbt-aether-deploy/"))
+ThisBuild / homepage := Some(new URL("http://github.com/arktekk/sbt-aether-deploy/"))
 
-startYear := Some(2012)
+ThisBuild / startYear := Some(2012)
 
-licenses := Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")))
+ThisBuild / licenses := Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")))
 
-scmInfo := Some(
+ThisBuild / scmInfo := Some(
   ScmInfo(
     new URL("http://github.com/arktekk/sbt-aether-deploy"),
     "scm:git:git://github.com/arktekk/sbt-aether-deploy.git",
@@ -46,7 +46,7 @@ scmInfo := Some(
   )
 )
 
-developers += Developer(
+ThisBuild / developers += Developer(
   "hamnis",
   "Erlend Hamnaberg",
   "erlend@hamnaberg.net",

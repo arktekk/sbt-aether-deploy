@@ -1,37 +1,44 @@
-organization := "no.arktekk.sbt"
+ThisBuild / organization := "no.arktekk.sbt"
 
-description := "Deploy in SBT using Sonatype Aether"
+ThisBuild / description := "Deploy in SBT using Sonatype Aether"
 
-name := "aether-deploy"
+ThisBuild / scalacOptions := Seq("-deprecation", "-unchecked")
 
-libraryDependencies ++= {
-  val mavenVersion         = "3.6.3"
-  val mavenResolverVersion = "1.4.1"
-  Seq(
-    "org.apache.maven"          % "maven-resolver-provider"        % mavenVersion,
-    "org.apache.maven.resolver" % "maven-resolver-api"             % mavenResolverVersion,
-    "org.apache.maven.resolver" % "maven-resolver-impl"            % mavenResolverVersion,
-    "org.apache.maven.resolver" % "maven-resolver-transport-file"  % mavenResolverVersion,
-    "org.apache.maven.resolver" % "maven-resolver-connector-basic" % mavenResolverVersion,
-    "org.apache.maven.resolver" % "maven-resolver-transport-http"  % mavenResolverVersion,
-    "org.apache.maven.resolver" % "maven-resolver-transport-file"  % mavenResolverVersion,
-    "commons-logging"           % "commons-logging"                % "1.2"
-  )
-}
-
-scalacOptions := Seq("-deprecation", "-unchecked")
-
-enablePlugins(SbtPlugin)
-
-scriptedLaunchOpts := {
+ThisBuild / scriptedLaunchOpts := {
   scriptedLaunchOpts.value ++
     Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + (version in ThisBuild).value)
 }
 
-scriptedBufferLog := false
+ThisBuild / scriptedBufferLog := false
 
-libraryDependencies += {
-  val sbtV   = (sbtBinaryVersion in pluginCrossBuild).value
-  val scalaV = (scalaBinaryVersion in pluginCrossBuild).value
-  sbt.Defaults.sbtPluginExtra("com.jsuereth" % "sbt-pgp" % "2.0.1" % "provided", sbtV, scalaV)
-}
+lazy val aetherDeploy = (project in file("aether-deploy"))
+  .enablePlugins(SbtPlugin)
+  .settings(
+    name := "aether-deploy",
+    libraryDependencies ++= {
+      val mavenVersion = "3.6.3"
+      val mavenResolverVersion = "1.4.1"
+      Seq(
+        "org.apache.maven" % "maven-resolver-provider" % mavenVersion,
+        "org.apache.maven.resolver" % "maven-resolver-api" % mavenResolverVersion,
+        "org.apache.maven.resolver" % "maven-resolver-impl" % mavenResolverVersion,
+        "org.apache.maven.resolver" % "maven-resolver-transport-file" % mavenResolverVersion,
+        "org.apache.maven.resolver" % "maven-resolver-connector-basic" % mavenResolverVersion,
+        "org.apache.maven.resolver" % "maven-resolver-transport-http" % mavenResolverVersion,
+        "org.apache.maven.resolver" % "maven-resolver-transport-file" % mavenResolverVersion,
+        "commons-logging" % "commons-logging" % "1.2"
+      )
+    }
+  )
+
+lazy val aetherDeploySigned = (project in file("aether-deploy-signed"))
+  .enablePlugins(SbtPlugin)
+  .dependsOn(aetherDeploy)
+  .settings(
+    name := "aether-deploy-signed",
+    addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.1")
+  )
+
+lazy val aetherDeployRoot = (project in file("."))
+  .aggregate(aetherDeploy, aetherDeploySigned)
+  .settings(publish / skip := true)
