@@ -4,6 +4,7 @@ import com.jsuereth.sbtpgp.PgpKeys
 import sbt._, Keys._
 import AetherKeys._
 
+@deprecated(message = "Will be a separate plugin in a future release", since = "0.24.1")
 object SignedAetherPlugin extends AetherPlugin {
   override def trigger  = noTrigger
   override def requires = sbt.plugins.IvyPlugin
