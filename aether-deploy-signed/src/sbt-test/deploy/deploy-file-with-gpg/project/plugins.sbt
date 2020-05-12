@@ -4,6 +4,4 @@ throw new RuntimeException("""
   |Specify this property using the scriptedLaunchOpts -D.
 """.stripMargin))
 
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % pluginVersion)
-
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.1")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % pluginVersion)

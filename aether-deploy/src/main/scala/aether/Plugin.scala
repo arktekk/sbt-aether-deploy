@@ -23,7 +23,7 @@ object AetherKeys {
 
 import AetherKeys._
 
-object AetherPlugin extends AetherPlugin {
+object AetherPlugin extends AutoPlugin {
   override def trigger  = allRequirements
   override def requires = sbt.plugins.IvyPlugin
   override def projectSettings = aetherBaseSettings ++ Seq(
@@ -41,9 +41,7 @@ object AetherPlugin extends AetherPlugin {
       })
     def overridePublishBothSettings: Seq[Setting[_]] = overridePublishSettings ++ overridePublishLocalSettings
   }
-}
 
-trait AetherPlugin extends AutoPlugin {
 
   lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
     //aetherWagons := Seq.empty,

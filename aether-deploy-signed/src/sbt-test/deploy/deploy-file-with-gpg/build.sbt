@@ -8,10 +8,4 @@ scalaVersion := "2.11.6"
 
 publishTo  := Some("foo" at (file(".") / "target" / "repo").toURI.toURL.toString)
 
-useGpg := true
-
-enablePlugins(SignedAetherPlugin)
-
-disablePlugins(AetherPlugin)
-
 overridePublishSignedSettings
