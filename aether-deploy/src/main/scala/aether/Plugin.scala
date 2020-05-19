@@ -53,12 +53,13 @@ object AetherPlugin extends AutoPlugin {
       (Keys.`package` in Compile).value
     },
     aetherOldVersionMethod := false,
+    aetherDeploy / version := { if (aetherOldVersionMethod.value) version.value else (ThisBuild / version).value },
     logLevel in aetherDeploy := Level.Debug
   )
 
   def defaultCoordinates = aetherCoordinates := {
     val art        = artifact.value
-    val theVersion = if (aetherOldVersionMethod.value) version.value else (version in ThisBuild).value
+    val theVersion = (aetherDeploy / version).value
 
     val artifactId =
       if (!sbtPlugin.value)
