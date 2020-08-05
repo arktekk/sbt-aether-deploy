@@ -52,11 +52,10 @@ object Booter {
   private def init(
       localRepoDir: File,
       streams: TaskStreams[_],
-      coordinates: MavenCoordinates,
-      customHeaders: Map[String, String]
-  ): (RepositorySystem, RepositorySystemSession) = {
+      coordinates: MavenCoordinates
+  ): (RepositorySystem, DefaultRepositorySystemSession) = {
     val system = newRepositorySystem()
-    system -> newSession(system, localRepoDir, streams, coordinates, customHeaders)
+    system -> newSession(system, localRepoDir, streams, coordinates)
   }
 
   def deploy(
@@ -65,8 +64,12 @@ object Booter {
       coordinates: MavenCoordinates,
       customHeaders: Map[String, String],
       request: DeployRequest
-  ): Try[Unit] = Try{
-    val (system, session) = init(localRepoDir, streams, coordinates, customHeaders)
+  ): Try[Unit] = Try {
+    val (system, session) = init(localRepoDir, streams, coordinates)
+    if (customHeaders.nonEmpty) {
+      session
+        .setConfigProperty(ConfigurationProperties.HTTP_HEADERS + "." + request.getRepository.getId, mapAsJavaMap(customHeaders))
+    }
     system.deploy(session, request)
   }
 
@@ -75,8 +78,8 @@ object Booter {
       streams: TaskStreams[_],
       coordinates: MavenCoordinates,
       request: InstallRequest
-  ): Try[Unit] = Try{
-    val (system, session) = init(localRepoDir, streams, coordinates, Map.empty)
+  ): Try[Unit] = Try {
+    val (system, session) = init(localRepoDir, streams, coordinates)
     system.install(session, request)
   }
 
@@ -84,18 +87,14 @@ object Booter {
       implicit system: RepositorySystem,
       localRepoDir: File,
       streams: TaskStreams[_],
-      coordinates: MavenCoordinates,
-      customHeaders: Map[String, String]
-  ): RepositorySystemSession = {
+      coordinates: MavenCoordinates
+  ): DefaultRepositorySystemSession = {
     val session   = new DefaultRepositorySystemSession()
     val localRepo = new LocalRepository(localRepoDir)
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo))
     session.setTransferListener(new ConsoleTransferListener(streams.log))
     session.setRepositoryListener(new ConsoleRepositoryListener(streams.log))
     session.setUserProperties(mapAsJavaMap(coordinates.props))
-    if (customHeaders.nonEmpty) {
-      session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS, mapAsJavaMap(customHeaders))
-    }
     session
   }
 
