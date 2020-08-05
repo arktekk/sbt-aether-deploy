@@ -1,5 +1,6 @@
 package aether
 
+import aether.internal._
 import sbt._
 import Keys.{version, _}
 import org.eclipse.aether.deployment.DeployRequest
@@ -9,16 +10,18 @@ import java.net.URI
 
 import org.eclipse.aether.repository.RemoteRepository.Builder
 import org.eclipse.aether.util.repository.AuthenticationBuilder
-import internal._
+
+import scala.util.{Failure, Success, Try}
 
 object AetherKeys {
-  val aetherArtifact         = taskKey[AetherArtifact]("Main artifact")
-  val aetherCoordinates      = settingKey[MavenCoordinates]("Internal coordinates")
-  val aetherDeploy           = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
-  val aetherInstall          = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
-  val aetherPackageMain      = taskKey[File]("package main Artifact")
-  val aetherLocalRepo        = settingKey[File]("Local maven repository.")
-  val aetherOldVersionMethod = settingKey[Boolean]("Flag for using the old method of getting the version")
+  val aetherArtifact          = taskKey[AetherArtifact]("Main artifact")
+  val aetherCoordinates       = settingKey[MavenCoordinates]("Internal coordinates")
+  val aetherDeploy            = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
+  val aetherInstall           = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
+  val aetherPackageMain       = taskKey[File]("package main Artifact")
+  val aetherLocalRepo         = settingKey[File]("Local maven repository.")
+  val aetherOldVersionMethod  = settingKey[Boolean]("Flag for using the old method of getting the version")
+  val aetherCustomHttpHeaders = settingKey[Map[String, String]]("Add these headers to the http request")
 }
 
 import AetherKeys._
@@ -42,7 +45,6 @@ object AetherPlugin extends AutoPlugin {
     def overridePublishBothSettings: Seq[Setting[_]] = overridePublishSettings ++ overridePublishLocalSettings
   }
 
-
   lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
     //aetherWagons := Seq.empty,
     aetherLocalRepo := Path.userHome / ".m2" / "repository",
@@ -54,7 +56,8 @@ object AetherPlugin extends AutoPlugin {
     },
     aetherOldVersionMethod := false,
     aetherDeploy / version := { if (aetherOldVersionMethod.value) version.value else (ThisBuild / version).value },
-    logLevel in aetherDeploy := Level.Debug
+    logLevel in aetherDeploy := Level.Debug,
+    aetherCustomHttpHeaders := Map.empty[String, String]
   )
 
   def defaultCoordinates = aetherCoordinates := {
@@ -74,7 +77,14 @@ object AetherPlugin extends AutoPlugin {
   lazy val deployTask = aetherDeploy := Def.taskDyn {
     if ((publishArtifact in Compile).value) {
       Def.task {
-        deployIt(publishTo.value, aetherLocalRepo.value, aetherArtifact.value, sbtPlugin.value, credentials.value)(streams.value)
+        deployIt(
+          publishTo.value,
+          aetherLocalRepo.value,
+          aetherArtifact.value,
+          sbtPlugin.value,
+          credentials.value,
+          aetherCustomHttpHeaders.value
+        )(streams.value)
       }
     } else {
       Def.task(())
@@ -106,8 +116,15 @@ object AetherPlugin extends AutoPlugin {
     builder.build()
   }
 
-  def deployIt(repo: Option[Resolver], localRepo: File, artifact: AetherArtifact, plugin: Boolean, cred: Seq[Credentials])(
-      implicit strem: TaskStreams
+  def deployIt(
+      repo: Option[Resolver],
+      localRepo: File,
+      artifact: AetherArtifact,
+      plugin: Boolean,
+      cred: Seq[Credentials],
+      customHeaders: Map[String, String]
+  )(
+      implicit stream: TaskStreams
   ) {
     val repository = repo
       .collect {
@@ -116,14 +133,14 @@ object AetherPlugin extends AutoPlugin {
       }
       .getOrElse(sys.error("There MUST be a configured publish repo"))
 
-    val maybeCred = scala.util.control.Exception.allCatch.apply {
+    val maybeCred = Try {
       val href = URI.create(repository.root)
       val c    = Credentials.forHost(cred, href.getHost)
       if (c.isEmpty && href.getHost != null) {
-        strem.log.warn("No credentials supplied for %s".format(href.getHost))
+        stream.log.warn("No credentials supplied for %s".format(href.getHost))
       }
       c
-    }
+    }.toOption.flatten
 
     val request = new DeployRequest()
     request.setRepository(toRepository(repository, plugin, maybeCred))
@@ -131,11 +148,11 @@ object AetherPlugin extends AutoPlugin {
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
-    try {
-      val (system, session) = Booter(localRepo, strem, artifact.coordinates)
-      system.deploy(session, request)
-    } catch {
-      case e: Exception => e.printStackTrace(); throw e
+    Booter.deploy(localRepo, stream, artifact.coordinates, customHeaders, request) match {
+      case Success(_) => ()
+      case Failure(ex) =>
+        ex.printStackTrace()
+        throw ex
     }
   }
 
@@ -146,11 +163,11 @@ object AetherPlugin extends AutoPlugin {
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
-    try {
-      val (system, session) = Booter(localRepo, streams, artifact.coordinates)
-      system.install(session, request)
-    } catch {
-      case e: Exception => e.printStackTrace(); throw e
+    Booter.install(localRepo, streams, artifact.coordinates, request) match {
+      case Success(_) => ()
+      case Failure(ex) =>
+        ex.printStackTrace()
+        throw ex
     }
   }
 }

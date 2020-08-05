@@ -4,10 +4,10 @@ package internal
 import java.io.File
 
 import org.apache.maven.repository.internal._
-
-import org.eclipse.aether.{DefaultRepositorySystemSession, RepositorySystem, RepositorySystemSession}
-
+import org.eclipse.aether.deployment.DeployRequest
+import org.eclipse.aether.{ConfigurationProperties, DefaultRepositorySystemSession, RepositorySystem, RepositorySystemSession}
 import org.eclipse.aether.impl._
+import org.eclipse.aether.installation.InstallRequest
 import org.eclipse.aether.repository.{LocalRepository, ProxySelector}
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory
@@ -16,8 +16,9 @@ import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 
 import scala.collection.JavaConverters.mapAsJavaMap
-
 import sbt.std.TaskStreams
+
+import scala.util.Try
 
 object Booter {
   private def newRepositorySystem(): RepositorySystem = {
@@ -48,20 +49,43 @@ object Booter {
     system
   }
 
-  def apply(
+  private def init(
       localRepoDir: File,
       streams: TaskStreams[_],
-      coordinates: MavenCoordinates
+      coordinates: MavenCoordinates,
+      customHeaders: Map[String, String]
   ): (RepositorySystem, RepositorySystemSession) = {
     val system = newRepositorySystem()
-    system -> newSession(system, localRepoDir, streams, coordinates)
+    system -> newSession(system, localRepoDir, streams, coordinates, customHeaders)
+  }
+
+  def deploy(
+      localRepoDir: File,
+      streams: TaskStreams[_],
+      coordinates: MavenCoordinates,
+      customHeaders: Map[String, String],
+      request: DeployRequest
+  ): Try[Unit] = Try{
+    val (system, session) = init(localRepoDir, streams, coordinates, customHeaders)
+    system.deploy(session, request)
+  }
+
+  def install(
+      localRepoDir: File,
+      streams: TaskStreams[_],
+      coordinates: MavenCoordinates,
+      request: InstallRequest
+  ): Try[Unit] = Try{
+    val (system, session) = init(localRepoDir, streams, coordinates, Map.empty)
+    system.install(session, request)
   }
 
   private def newSession(
       implicit system: RepositorySystem,
       localRepoDir: File,
       streams: TaskStreams[_],
-      coordinates: MavenCoordinates
+      coordinates: MavenCoordinates,
+      customHeaders: Map[String, String]
   ): RepositorySystemSession = {
     val session   = new DefaultRepositorySystemSession()
     val localRepo = new LocalRepository(localRepoDir)
@@ -69,6 +93,9 @@ object Booter {
     session.setTransferListener(new ConsoleTransferListener(streams.log))
     session.setRepositoryListener(new ConsoleRepositoryListener(streams.log))
     session.setUserProperties(mapAsJavaMap(coordinates.props))
+    if (customHeaders.nonEmpty) {
+      session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS, mapAsJavaMap(customHeaders))
+    }
     session
   }
 
