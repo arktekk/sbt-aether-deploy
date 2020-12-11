@@ -14,6 +14,7 @@ case class MavenCoordinates(
 ) {
   def coordinates = "%s:%s:%s%s:%s".format(groupId, artifactId, extension, classifier.map(_ + ":").getOrElse(""), version)
 
+  def sbtPlugin()                 = withProp(MavenCoordinates.SbtPlugin, "true")
   def withScalaVersion(v: String) = withProp(MavenCoordinates.ScalaVersion, v)
   def withSbtVersion(v: String)   = withProp(MavenCoordinates.SbtVersion, v)
   def withExtension(file: File) = {
@@ -28,6 +29,7 @@ case class MavenCoordinates(
 }
 
 object MavenCoordinates {
+  val SbtPlugin = "sbt-plugin"
   val ScalaVersion = "scala-version"
   val SbtVersion   = "sbt-version"
 
@@ -47,7 +49,6 @@ case class AetherSubArtifact(file: File, classifier: Option[String] = None, exte
 }
 
 case class AetherArtifact(file: File, coordinates: MavenCoordinates, subartifacts: Seq[AetherSubArtifact] = Nil) {
-  def isSbtPlugin = coordinates.props.contains(MavenCoordinates.SbtVersion)
 
   def attach(file: File, classifier: String, extension: String = "jar") = {
     copy(subartifacts = subartifacts :+ AetherSubArtifact(file, Some(classifier), extension))
