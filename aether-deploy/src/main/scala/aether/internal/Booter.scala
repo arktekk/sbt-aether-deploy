@@ -3,7 +3,8 @@ package internal
 
 import java.io.File
 
-import org.apache.maven.repository.internal._
+import aether.maven.VersionsMetadataGeneratorFactory
+import org.apache.maven.repository.internal.{DefaultArtifactDescriptorReader, DefaultVersionRangeResolver, DefaultVersionResolver, SnapshotMetadataGeneratorFactory}
 import org.eclipse.aether.deployment.DeployRequest
 import org.eclipse.aether.{ConfigurationProperties, DefaultRepositorySystemSession, RepositorySystem, RepositorySystemSession}
 import org.eclipse.aether.impl._

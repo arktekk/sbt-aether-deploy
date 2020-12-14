@@ -70,7 +70,7 @@ object AetherPlugin extends AutoPlugin {
       else art.name
     val coords = MavenCoordinates(organization.value, artifactId, theVersion, None, art.extension)
     if (sbtPlugin.value)
-      coords.withSbtVersion((sbtBinaryVersion in pluginCrossBuild).value).withScalaVersion(scalaBinaryVersion.value)
+      coords.sbtPlugin().withSbtVersion((sbtBinaryVersion in pluginCrossBuild).value).withScalaVersion(scalaBinaryVersion.value)
     else coords
   }
 
