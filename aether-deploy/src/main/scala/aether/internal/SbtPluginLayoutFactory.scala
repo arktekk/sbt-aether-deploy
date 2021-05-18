@@ -8,6 +8,7 @@ import org.eclipse.aether.transfer.NoRepositoryLayoutException
 import org.eclipse.aether.metadata.Metadata
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.Checksum
 import org.eclipse.aether.artifact.Artifact
+import org.eclipse.aether.metadata.Metadata.Nature
 
 import java.net.URI
 
@@ -34,10 +35,10 @@ class SbtRepositoryLayout(sbtVersion: String, scalaVersion: String) extends Repo
     path.append(artifact.getArtifactId).append('_').append(scalaVersion).append('_').append(sbtVersion).append('/')
     path.append(artifact.getBaseVersion).append('/')
     path.append(artifact.getArtifactId).append('-').append(artifact.getVersion)
-    if (artifact.getClassifier != null && !artifact.getClassifier.trim.isEmpty) {
+    if (artifact.getClassifier != null && artifact.getClassifier.trim.nonEmpty) {
       path.append("-").append(artifact.getClassifier)
     }
-    if (artifact.getExtension.length > 0) {
+    if (artifact.getExtension.nonEmpty) {
       path.append('.').append(artifact.getExtension)
     }
     URI.create(path.toString())
@@ -48,7 +49,19 @@ class SbtRepositoryLayout(sbtVersion: String, scalaVersion: String) extends Repo
     if (metadata.getGroupId.nonEmpty) {
       path.append(metadata.getGroupId.replace('.', '/')).append('/')
       if (metadata.getArtifactId.nonEmpty) {
-        path.append(metadata.getArtifactId).append('_').append(scalaVersion).append('_').append(sbtVersion).append('/')
+        path.append(metadata.getArtifactId)
+
+        // only append the scala and sbt versions for non-snapshots metadata objects
+        // as they will already have a transformed artifact id.
+        // this avoids something like:
+        // foo_2.12_1.0_2.12_1.0
+        val nature = metadata.getNature
+        if(nature == Nature.RELEASE || nature == Nature.RELEASE_OR_SNAPSHOT) {
+          path.append('_').append(scalaVersion).append('_').append(sbtVersion)
+        }
+
+        path.append('/')
+
         if (metadata.getVersion.nonEmpty) path.append(metadata.getVersion).append('/')
       }
     }

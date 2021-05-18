@@ -3,7 +3,7 @@ package internal
 
 import org.eclipse.aether.util.repository.{AuthenticationBuilder, DefaultProxySelector}
 import util.Properties
-import org.eclipse.aether.repository.{Proxy => AProxy, ProxySelector, Authentication}
+import org.eclipse.aether.repository.{Proxy => AProxy, ProxySelector}
 import java.net.URI
 
 /*
