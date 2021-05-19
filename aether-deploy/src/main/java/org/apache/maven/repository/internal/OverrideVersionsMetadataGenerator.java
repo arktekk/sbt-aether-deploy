@@ -16,15 +16,15 @@ class OverrideVersionsMetadataGenerator
 
     private Map<Object, VersionsMetadataDelegate> processedVersions;
 
-    OverrideVersionsMetadataGenerator(RepositorySystemSession session, InstallRequest request) {
-        this(session, request.getMetadata());
+    OverrideVersionsMetadataGenerator(InstallRequest request) {
+        this(request.getMetadata());
     }
 
-    OverrideVersionsMetadataGenerator(RepositorySystemSession session, DeployRequest request) {
-        this(session, request.getMetadata());
+    OverrideVersionsMetadataGenerator(DeployRequest request) {
+        this(request.getMetadata());
     }
 
-    private OverrideVersionsMetadataGenerator(RepositorySystemSession session, Collection<? extends Metadata> metadatas) {
+    private OverrideVersionsMetadataGenerator(Collection<? extends Metadata> metadatas) {
         versions = new LinkedHashMap<>();
         processedVersions = new LinkedHashMap<>();
 

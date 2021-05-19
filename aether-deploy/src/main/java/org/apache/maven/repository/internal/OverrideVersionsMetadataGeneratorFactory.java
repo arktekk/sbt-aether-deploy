@@ -9,12 +9,12 @@ import org.eclipse.aether.installation.InstallRequest;
 public class OverrideVersionsMetadataGeneratorFactory
         implements MetadataGeneratorFactory {
 
-    public MetadataGenerator newInstance(RepositorySystemSession session, InstallRequest request) {
-        return new OverrideVersionsMetadataGenerator(session, request);
+    public MetadataGenerator newInstance(RepositorySystemSession unused, InstallRequest request) {
+        return new OverrideVersionsMetadataGenerator(request);
     }
 
-    public MetadataGenerator newInstance(RepositorySystemSession session, DeployRequest request) {
-        return new OverrideVersionsMetadataGenerator(session, request);
+    public MetadataGenerator newInstance(RepositorySystemSession unused, DeployRequest request) {
+        return new OverrideVersionsMetadataGenerator(request);
     }
 
     public float getPriority() {
