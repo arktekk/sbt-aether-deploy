@@ -11,7 +11,7 @@ public class OverrideSnapshotMetadataGeneratorFactory
 
     public MetadataGenerator newInstance(RepositorySystemSession session, InstallRequest request) {
         // TODO: check that aetherInstall works properly with sbt plugin snapshots
-        return new LocalSnapshotMetadataGenerator(session, request);
+        return new OverrideLocalSnapshotMetadataGenerator(session, request);
     }
 
     public MetadataGenerator newInstance(RepositorySystemSession session, DeployRequest request) {

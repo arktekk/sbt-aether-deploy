@@ -1,24 +1,5 @@
 package org.apache.maven.repository.internal;
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 import aether.MavenCoordinates;
 import org.apache.maven.artifact.repository.metadata.Snapshot;
 import org.apache.maven.artifact.repository.metadata.Versioning;
@@ -34,9 +15,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * @author Benjamin Bentmann
- */
 class OverrideLocalSnapshotMetadataGenerator
         implements MetadataGenerator {
 
@@ -44,7 +22,7 @@ class OverrideLocalSnapshotMetadataGenerator
 
     private final boolean legacyFormat;
 
-    OverrideLocalSnapshotMetadataGenerator(RepositorySystemSession session) {
+    OverrideLocalSnapshotMetadataGenerator(RepositorySystemSession session, InstallRequest unused) {
         legacyFormat = ConfigUtils.getBoolean(session.getConfigProperties(), false, "maven.metadata.legacy");
         snapshots = new LinkedHashMap<>();
     }
@@ -66,6 +44,7 @@ class OverrideLocalSnapshotMetadataGenerator
     }
 
     private static org.apache.maven.artifact.repository.metadata.Metadata createMetadata(Artifact artifact, boolean legacyFormat) {
+        //todo: Consider calling LocalSnapshotMetadata.createMetadata using reflection
         Snapshot snapshot = new Snapshot();
         snapshot.setLocalCopy(true);
         Versioning versioning = new Versioning();
@@ -74,6 +53,10 @@ class OverrideLocalSnapshotMetadataGenerator
         org.apache.maven.artifact.repository.metadata.Metadata metadata = new org.apache.maven.artifact.repository.metadata.Metadata();
         metadata.setVersioning(versioning);
         metadata.setGroupId(artifact.getGroupId());
+        metadata.setVersion(artifact.getBaseVersion());
+        if (!legacyFormat) {
+            metadata.setModelVersion("1.1.0");
+        }
 
         boolean sbtPlugin = Boolean.parseBoolean(artifact.getProperty(MavenCoordinates.SbtPlugin(), "false"));
         if (sbtPlugin) {
@@ -82,12 +65,6 @@ class OverrideLocalSnapshotMetadataGenerator
             metadata.setArtifactId(artifact.getArtifactId() + "_" + scalaVersion + "_" + sbtVersion);
         } else {
             metadata.setArtifactId(artifact.getArtifactId());
-        }
-
-        metadata.setVersion(artifact.getBaseVersion());
-
-        if (!legacyFormat) {
-            metadata.setModelVersion("1.1.0");
         }
 
         return metadata;
