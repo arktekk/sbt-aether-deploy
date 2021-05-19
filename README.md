@@ -6,14 +6,17 @@ The same behaviour as Maven should be expected.
 ## project/plugins.sbt
 
 ```scala
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.26.0")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.27.0")
 
 /** OR **/
 
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.26.0") // For sbt-pgp 2.x support
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.27.0") // For sbt-pgp 2.x support
 ```
 
 # Breaking Changes
+
+## 0.27.0
+`aether-deploy-signed` now uses the new maven coordinates for `sbt-pgp`
 
 ## 0.25.0
 `sbt-pgp` support now published separately, and requires `aether-deploy-signed` dependency declaration instead of
