@@ -9,7 +9,7 @@ object SignedAetherPlugin extends AutoPlugin {
   override def requires = AetherPlugin && SbtPgp
   override def projectSettings = Seq(
     aetherArtifact := {
-      AetherPlugin.createArtifact((PgpKeys.signedArtifacts in Compile).value, aetherCoordinates.value, aetherPackageMain.value)
+      AetherPlugin.createArtifact((Compile / PgpKeys.signedArtifacts).value, aetherCoordinates.value, aetherPackageMain.value)
     }
   )
 
