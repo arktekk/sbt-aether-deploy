@@ -29,7 +29,7 @@ case class MavenCoordinates(
 }
 
 object MavenCoordinates {
-  val SbtPlugin = "sbt-plugin"
+  val SbtPlugin    = "sbt-plugin"
   val ScalaVersion = "scala-version"
   val SbtVersion   = "sbt-version"
 

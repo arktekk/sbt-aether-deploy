@@ -56,7 +56,7 @@ class SbtRepositoryLayout(sbtVersion: String, scalaVersion: String) extends Repo
         // this avoids something like:
         // foo_2.12_1.0_2.12_1.0
         val nature = metadata.getNature
-        if(nature == Nature.RELEASE || nature == Nature.RELEASE_OR_SNAPSHOT) {
+        if (nature == Nature.RELEASE || nature == Nature.RELEASE_OR_SNAPSHOT) {
           path.append('_').append(scalaVersion).append('_').append(sbtVersion)
         }
 
