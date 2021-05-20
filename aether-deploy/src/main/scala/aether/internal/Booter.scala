@@ -2,10 +2,13 @@ package aether
 package internal
 
 import java.io.File
-
-import aether.maven.SnapshotMetadataGeneratorFactory
-import aether.maven.VersionsMetadataGeneratorFactory
-import org.apache.maven.repository.internal.{DefaultArtifactDescriptorReader, DefaultVersionRangeResolver, DefaultVersionResolver}
+import org.apache.maven.repository.internal.{
+  DefaultArtifactDescriptorReader,
+  DefaultVersionRangeResolver,
+  DefaultVersionResolver,
+  OverrideSnapshotMetadataGeneratorFactory,
+  OverrideVersionsMetadataGeneratorFactory
+}
 import org.eclipse.aether.deployment.DeployRequest
 import org.eclipse.aether.{ConfigurationProperties, DefaultRepositorySystemSession, RepositorySystem}
 import org.eclipse.aether.impl._
@@ -34,8 +37,8 @@ object Booter {
       classOf[org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory]
     )
     locator.setServices(classOf[ProxySelector], SystemPropertyProxySelector())
-    locator.addService(classOf[MetadataGeneratorFactory], classOf[SnapshotMetadataGeneratorFactory])
-    locator.addService(classOf[MetadataGeneratorFactory], classOf[VersionsMetadataGeneratorFactory])
+    locator.addService(classOf[MetadataGeneratorFactory], classOf[OverrideSnapshotMetadataGeneratorFactory])
+    locator.addService(classOf[MetadataGeneratorFactory], classOf[OverrideVersionsMetadataGeneratorFactory])
 
     addTransporterFactories(locator)
 
