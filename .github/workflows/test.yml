@@ -1,0 +1,23 @@
+name: Test 
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: coursier/cache-action@v5
+    - name: Set up JDK 11
+      uses: olafurpg/setup-scala@v10
+      with:
+        java-version: adopt@1.11
+    - name: Scalafmt Check
+      run: sbt scalafmtCheckAll
+    - name: "aetherDeploy Scripted"
+      run: sbt aetherDeploy/scripted
+    # Handle gpg signed stuff

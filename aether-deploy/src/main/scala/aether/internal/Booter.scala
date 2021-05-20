@@ -85,8 +85,8 @@ object Booter {
     system.install(session, request)
   }
 
-  private def newSession(
-      implicit system: RepositorySystem,
+  private def newSession(implicit
+      system: RepositorySystem,
       localRepoDir: File,
       streams: TaskStreams[_],
       coordinates: MavenCoordinates

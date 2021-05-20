@@ -18,7 +18,7 @@ private[aether] object SystemPropertyProxySelector {
       // have to do it.
       // no_proxy is one the form "example.com,.example.org" which is
       // equivalient Java's to "example.com|*.example.org"
-      val no_proxy = envOrProp("no_proxy").map(np => {
+      val no_proxy      = envOrProp("no_proxy").map(np => {
         np.split(",")
           .map(p => {
             if (p.startsWith("."))
@@ -35,8 +35,7 @@ private[aether] object SystemPropertyProxySelector {
 
   def apply(): ProxySelector = selector
 
-  /**
-    * java -Dhttp.proxyHost=myproxy -Dhttp.proxyPort=8080 \
+  /** java -Dhttp.proxyHost=myproxy -Dhttp.proxyPort=8080 \
     *      -Dhttp.proxyUser=username -Dhttp.proxyPassword=mypassword \
     *      -Dhttp.nonProxyHosts=
     * @return
@@ -58,7 +57,7 @@ private[aether] object SystemPropertyProxySelector {
         new AProxy(uri.getScheme, uri.getHost, port, auth)
       })
 
-    val http =
+    val http  =
       envOrProp("http.proxyHost").map(host => new AProxy("http", host, envOrProp("http.proxyPort").getOrElse("80").toInt, auth))
     val https = envOrProp("https.proxyHost").map(host =>
       new AProxy("https", host, envOrProp("https.proxyPort").getOrElse("443").toInt, auth)
