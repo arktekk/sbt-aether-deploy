@@ -2,7 +2,13 @@ package aether
 package internal
 
 import java.io.File
-import org.apache.maven.repository.internal.{DefaultArtifactDescriptorReader, DefaultVersionRangeResolver, DefaultVersionResolver, OverrideSnapshotMetadataGeneratorFactory, OverrideVersionsMetadataGeneratorFactory}
+import org.apache.maven.repository.internal.{
+  DefaultArtifactDescriptorReader,
+  DefaultVersionRangeResolver,
+  DefaultVersionResolver,
+  OverrideSnapshotMetadataGeneratorFactory,
+  OverrideVersionsMetadataGeneratorFactory
+}
 import org.eclipse.aether.deployment.DeployRequest
 import org.eclipse.aether.{ConfigurationProperties, DefaultRepositorySystemSession, RepositorySystem}
 import org.eclipse.aether.impl._
