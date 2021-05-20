@@ -27,8 +27,8 @@ object AetherKeys {
 import AetherKeys._
 
 object AetherPlugin extends AutoPlugin {
-  override def trigger  = allRequirements
-  override def requires = sbt.plugins.IvyPlugin
+  override def trigger         = allRequirements
+  override def requires        = sbt.plugins.IvyPlugin
   override def projectSettings = aetherBaseSettings ++ Seq(
     aetherArtifact := {
       createArtifact((packagedArtifacts in Compile).value, aetherCoordinates.value, aetherPackageMain.value)
@@ -36,13 +36,13 @@ object AetherPlugin extends AutoPlugin {
   )
 
   object autoImport {
-    def overridePublishSettings: Seq[Setting[_]] = Seq(publish := aetherDeploy.value)
+    def overridePublishSettings: Seq[Setting[_]]      = Seq(publish := aetherDeploy.value)
     def overridePublishLocalSettings: Seq[Setting[_]] =
       Seq(publishLocal := {
         publishLocal.value
         aetherInstall.value
       })
-    def overridePublishBothSettings: Seq[Setting[_]] = overridePublishSettings ++ overridePublishLocalSettings
+    def overridePublishBothSettings: Seq[Setting[_]]  = overridePublishSettings ++ overridePublishLocalSettings
   }
 
   lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
@@ -68,7 +68,7 @@ object AetherPlugin extends AutoPlugin {
       if (!sbtPlugin.value)
         CrossVersion(crossVersion.value, scalaVersion.value, scalaBinaryVersion.value).map(_(art.name)) getOrElse art.name
       else art.name
-    val coords = MavenCoordinates(organization.value, artifactId, theVersion, None, art.extension)
+    val coords     = MavenCoordinates(organization.value, artifactId, theVersion, None, art.extension)
     if (sbtPlugin.value)
       coords.sbtPlugin().withSbtVersion((sbtBinaryVersion in pluginCrossBuild).value).withScalaVersion(scalaBinaryVersion.value)
     else coords
@@ -107,7 +107,7 @@ object AetherPlugin extends AutoPlugin {
   }
 
   private def toRepository(repo: MavenRepository, plugin: Boolean, credentials: Option[DirectCredentials]): RemoteRepository = {
-    val builder: Builder = new Builder(repo.name, if (plugin) "sbt-plugin" else "default", repo.root)
+    val builder: Builder     = new Builder(repo.name, if (plugin) "sbt-plugin" else "default", repo.root)
     credentials.foreach { c =>
       builder.setAuthentication(new AuthenticationBuilder().addUsername(c.userName).addPassword(c.passwd).build())
     }
@@ -123,8 +123,8 @@ object AetherPlugin extends AutoPlugin {
       plugin: Boolean,
       cred: Seq[Credentials],
       customHeaders: Map[String, String]
-  )(
-      implicit stream: TaskStreams
+  )(implicit
+      stream: TaskStreams
   ) {
     val repository = repo
       .collect {
@@ -144,12 +144,12 @@ object AetherPlugin extends AutoPlugin {
 
     val request = new DeployRequest()
     request.setRepository(toRepository(repository, plugin, maybeCred))
-    val parent = artifact.toArtifact
+    val parent  = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
     Booter.deploy(localRepo, stream, artifact.coordinates, customHeaders, request) match {
-      case Success(_) => ()
+      case Success(_)  => ()
       case Failure(ex) =>
         ex.printStackTrace()
         throw ex
@@ -164,7 +164,7 @@ object AetherPlugin extends AutoPlugin {
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
     Booter.install(localRepo, streams, artifact.coordinates, request) match {
-      case Success(_) => ()
+      case Success(_)  => ()
       case Failure(ex) =>
         ex.printStackTrace()
         throw ex
