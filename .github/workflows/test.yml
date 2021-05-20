@@ -18,5 +18,6 @@ jobs:
         java-version: adopt@1.11
     - name: Scalafmt Check
       run: sbt scalafmtCheckAll
-    - name: "Scripted"
-      run: sbt scripted
+    - name: "aetherDeploy Scripted"
+      run: sbt aetherDeploy/scripted
+    # Handle gpg signed stuff
