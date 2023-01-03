@@ -17,7 +17,14 @@ ThisBuild / packageOptions += {
   )
 }
 
-ThisBuild / credentials += Credentials(Path.userHome / ".sbt" / "arktekk-credentials")
+ThisBuild / credentials := List (
+  Credentials(
+    "",
+    "oss.sonatype.org",
+    System.getenv("PUBLISH_USER"),
+    System.getenv("PUBLISH_USER_PASSPHRASE")
+  )
+)
 
 ThisBuild / pomIncludeRepository := { x =>
   false

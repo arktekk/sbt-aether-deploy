@@ -1,23 +1,92 @@
-name: Test 
+name: 'Test & Publish'
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ '*' ]
+    branches: [ master ]
+    tags: [ v* ]
   pull_request:
     branches: [ master ]
 
 jobs:
-  build:
+
+  test:
+    name: Execute Tests (Java ${{ matrix.java }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [ 8, 11, 17 ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: sbt
+
+      - name: Execute sbt Scripted Tests
+        run: sbt scripted
+
+  analysis:
+    name: Analyse Code
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: coursier/cache-action@v5
-    - name: Set up JDK 11
-      uses: olafurpg/setup-scala@v10
-      with:
-        java-version: adopt@1.11
-    - name: Scalafmt Check
-      run: sbt scalafmtCheckAll
-    - name: "aetherDeploy Scripted"
-      run: sbt aetherDeploy/scripted
-    # Handle gpg signed stuff
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+
+      - name: Analyse Source Code Formatting
+        run: sbt scalafmtCheckAll
+
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: [ test, analysis ]
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 8
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 8
+          cache: sbt
+
+      - name: Import Signing Key
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
+          gpg_private_key: ${{ secrets.GPG_SIGNING_KEY }}
+          passphrase: ${{ secrets.GPG_SIGNING_KEY_PASSPHRASE }}
+
+      - name: Update Signing Key Trust Level
+        run: echo -e "trust\n5\ny" | gpg --batch --no-tty --command-fd 0 --edit-key ${{ secrets.GPG_SIGNING_KEY_ID }}
+
+      - name: Publish Release
+        run: sbt aetherDeploy
+        with:
+          PUBLISH_USER: ${{ secrets.PUBLISH_USER }}
+          PUBLISH_USER_PASSPHRASE: ${{ secrets.PUBLISH_USER_PASSPHRASE }}
+          SIGNING_KEY_ID: ${{ secrets.GPG_SIGNING_KEY_ID }}
+          SIGNING_KEY_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSPHRASE }}
