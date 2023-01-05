@@ -10,10 +10,7 @@ import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.util.ConfigUtils;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 class OverrideLocalSnapshotMetadataGenerator
         implements MetadataGenerator {
@@ -33,7 +30,7 @@ class OverrideLocalSnapshotMetadataGenerator
                 Object key = LocalSnapshotMetadata.getKey(artifact);
                 LocalSnapshotMetadata snapshotMetadata = snapshots.get(key);
                 if (snapshotMetadata == null) {
-                    snapshotMetadata = new LocalSnapshotMetadata(createMetadata(artifact, legacyFormat), artifact.getFile(), legacyFormat);
+                    snapshotMetadata = new LocalSnapshotMetadata(createMetadata(artifact, legacyFormat), artifact.getFile(), legacyFormat, new Date());
                     snapshots.put(key, snapshotMetadata);
                 }
                 snapshotMetadata.bind(artifact);

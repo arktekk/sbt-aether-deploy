@@ -15,7 +15,7 @@ public class VersionsMetadataDelegate extends MavenMetadata {
     }
 
     public VersionsMetadataDelegate(VersionsMetadata delegate, Artifact artifact, File file) {
-        super(patchMetadata(delegate.metadata, artifact), file);
+        super(patchMetadata(delegate.metadata, artifact), file, delegate.timestamp);
         this.delegate = delegate;
         this.artifact = artifact;
     }

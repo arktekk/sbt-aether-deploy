@@ -31,7 +31,7 @@ object AetherPlugin extends AutoPlugin {
   override def requires        = sbt.plugins.IvyPlugin
   override def projectSettings = aetherBaseSettings ++ Seq(
     aetherArtifact := {
-      createArtifact((packagedArtifacts in Compile).value, aetherCoordinates.value, aetherPackageMain.value)
+      createArtifact((Compile / packagedArtifacts).value, aetherCoordinates.value, aetherPackageMain.value)
     }
   )
 
@@ -52,11 +52,11 @@ object AetherPlugin extends AutoPlugin {
     deployTask,
     installTask,
     aetherPackageMain := {
-      (Keys.`package` in Compile).value
+      (Compile / Keys.`package`).value
     },
     aetherOldVersionMethod := false,
     aetherDeploy / version := { if (aetherOldVersionMethod.value) version.value else (ThisBuild / version).value },
-    logLevel in aetherDeploy := Level.Debug,
+    aetherDeploy / logLevel := Level.Debug,
     aetherCustomHttpHeaders := Map.empty[String, String]
   )
 
@@ -70,7 +70,7 @@ object AetherPlugin extends AutoPlugin {
       else art.name
     val coords     = MavenCoordinates(organization.value, artifactId, theVersion, None, art.extension)
     if (sbtPlugin.value)
-      coords.sbtPlugin().withSbtVersion((sbtBinaryVersion in pluginCrossBuild).value).withScalaVersion(scalaBinaryVersion.value)
+      coords.sbtPlugin().withSbtVersion((pluginCrossBuild / sbtBinaryVersion).value).withScalaVersion(scalaBinaryVersion.value)
     else coords
   }
 

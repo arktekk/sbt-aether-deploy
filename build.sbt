@@ -6,7 +6,7 @@ ThisBuild / scalacOptions := Seq("-deprecation", "-unchecked")
 
 ThisBuild / scriptedLaunchOpts := {
   scriptedLaunchOpts.value ++
-    Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + (ThisBuild / version).value)
+    Seq("-Xmx1024M", "-Dplugin.version=" + (ThisBuild / version).value)
 }
 
 ThisBuild / scriptedBufferLog := false
@@ -16,8 +16,8 @@ lazy val aetherDeploy = (project in file("aether-deploy"))
   .settings(
     name := "aether-deploy",
     libraryDependencies ++= {
-      val mavenVersion = "3.8.1"
-      val mavenResolverVersion = "1.7.0"
+      val mavenVersion = "3.8.7"
+      val mavenResolverVersion = "1.9.2"
       Seq(
         "org.apache.maven" % "maven-resolver-provider" % mavenVersion,
         "org.apache.maven.resolver" % "maven-resolver-api" % mavenResolverVersion,
@@ -36,7 +36,7 @@ lazy val aetherDeploySigned = (project in file("aether-deploy-signed"))
   .dependsOn(aetherDeploy)
   .settings(
     name := "aether-deploy-signed",
-    addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2")
+    addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.2.1")
   )
 
 lazy val aetherDeployRoot = (project in file("."))
