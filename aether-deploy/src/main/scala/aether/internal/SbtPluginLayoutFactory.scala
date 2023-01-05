@@ -22,7 +22,7 @@ class SbtPluginLayoutFactory extends RepositoryLayoutFactory {
     val userProperties = mapAsScalaMap(session.getUserProperties)
     (repository.getContentType, userProperties.get(SbtVersion), userProperties.get(ScalaVersion)) match {
       case ("sbt-plugin", Some(sbtVersion), Some(scalaVersion)) => new SbtRepositoryLayout(sbtVersion, scalaVersion)
-      case _ => throw new NoRepositoryLayoutException(repository, "Not an sbt-plugin repository")
+      case _                                                    => throw new NoRepositoryLayoutException(repository, "Not an sbt-plugin repository")
     }
   }
 
@@ -30,7 +30,8 @@ class SbtPluginLayoutFactory extends RepositoryLayoutFactory {
 }
 
 class SbtRepositoryLayout(sbtVersion: String, scalaVersion: String) extends RepositoryLayout {
-  private val checksumAlgorithmFactories = List[ChecksumAlgorithmFactory](new Sha1ChecksumAlgorithmFactory, new Md5ChecksumAlgorithmFactory)
+  private val checksumAlgorithmFactories =
+    List[ChecksumAlgorithmFactory](new Sha1ChecksumAlgorithmFactory, new Md5ChecksumAlgorithmFactory)
 
   def getLocation(artifact: Artifact, upload: Boolean): URI = {
     val path = new StringBuilder(128)
