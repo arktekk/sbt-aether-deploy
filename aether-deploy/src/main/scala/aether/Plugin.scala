@@ -75,7 +75,9 @@ object AetherPlugin extends AutoPlugin {
   }
 
   lazy val deployTask = aetherDeploy := Def.taskDyn {
-    if ((publishArtifact in Compile).value) {
+    val _skip = (publish / skip).value
+    val doPublish = (Compile / publishArtifact).value
+    if (doPublish && !_skip) {
       Def.task {
         deployIt(
           publishTo.value,
