@@ -1,6 +1,6 @@
 import aether.AetherKeys._
 
-version in ThisBuild  := "0.1"
+ThisBuild / version  := "0.1"
 
 name := "packaged-app"
 
@@ -16,5 +16,5 @@ overridePublishSettings
 
 aetherArtifact := {
     val artifact = aetherArtifact.value
-    artifact.attach((packageBin in Universal).value, "dist", "zip")
+    artifact.attach((Universal / packageBin).value, "dist", "zip")
 }

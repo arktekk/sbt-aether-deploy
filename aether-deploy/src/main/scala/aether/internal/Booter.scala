@@ -11,7 +11,7 @@ import org.apache.maven.repository.internal.{
 }
 import org.eclipse.aether.deployment.DeployRequest
 import org.eclipse.aether.{ConfigurationProperties, DefaultRepositorySystemSession, RepositorySystem}
-import org.eclipse.aether.impl._
+import org.eclipse.aether.impl.*
 import org.eclipse.aether.installation.InstallRequest
 import org.eclipse.aether.repository.{LocalRepository, ProxySelector}
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
@@ -23,9 +23,12 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory
 import scala.collection.JavaConverters.mapAsJavaMap
 import sbt.std.TaskStreams
 
+import scala.annotation.nowarn
 import scala.util.Try
 
 object Booter {
+
+  @nowarn("cat=deprecation")
   private def newRepositorySystem(): RepositorySystem = {
     val locator = new DefaultServiceLocator()
     locator.addService(classOf[RepositoryLayoutFactory], classOf[SbtPluginLayoutFactory])
@@ -103,6 +106,7 @@ object Booter {
     session
   }
 
+  @nowarn("cat=deprecation")
   private def addTransporterFactories(locator: DefaultServiceLocator) {
     val services = Seq(
       new HttpTransporterFactory(),

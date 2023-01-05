@@ -6,13 +6,15 @@ import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.repository.RemoteRepository
 import org.eclipse.aether.transfer.NoRepositoryLayoutException
 import org.eclipse.aether.metadata.Metadata
-import org.eclipse.aether.spi.connector.layout.RepositoryLayout.Checksum
+import org.eclipse.aether.spi.connector.layout.RepositoryLayout.ChecksumLocation
 import org.eclipse.aether.artifact.Artifact
+import org.eclipse.aether.internal.impl.checksum.{Md5ChecksumAlgorithmFactory, Sha1ChecksumAlgorithmFactory}
 import org.eclipse.aether.metadata.Metadata.Nature
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory
 
 import java.net.URI
-
-import scala.collection.JavaConverters.mapAsScalaMap
+import java.util
+import scala.collection.JavaConverters.*
 
 class SbtPluginLayoutFactory extends RepositoryLayoutFactory {
   def newInstance(session: RepositorySystemSession, repository: RemoteRepository): RepositoryLayout = {
@@ -28,6 +30,8 @@ class SbtPluginLayoutFactory extends RepositoryLayoutFactory {
 }
 
 class SbtRepositoryLayout(sbtVersion: String, scalaVersion: String) extends RepositoryLayout {
+  private val checksumAlgorithmFactories =
+    List[ChecksumAlgorithmFactory](new Sha1ChecksumAlgorithmFactory, new Md5ChecksumAlgorithmFactory)
 
   def getLocation(artifact: Artifact, upload: Boolean): URI = {
     val path = new StringBuilder(128)
@@ -69,10 +73,16 @@ class SbtRepositoryLayout(sbtVersion: String, scalaVersion: String) extends Repo
     URI.create(path.toString())
   }
 
-  def getChecksums(artifact: Artifact, upload: Boolean, location: URI): java.util.List[Checksum] = {
-    java.util.Arrays.asList(Checksum.forLocation(location, "SHA-1"), Checksum.forLocation(location, "MD5"))
+  override def getChecksumAlgorithmFactories: util.List[ChecksumAlgorithmFactory] =
+    checksumAlgorithmFactories.asJava
+
+  override def hasChecksums(artifact: Artifact): Boolean = false
+
+  override def getChecksumLocations(artifact: Artifact, upload: Boolean, location: URI): util.List[ChecksumLocation] = {
+    checksumAlgorithmFactories.map(alg => ChecksumLocation.forLocation(location, alg)).asJava
   }
 
-  def getChecksums(metadata: Metadata, upload: Boolean, location: URI): java.util.List[Checksum] =
+  override def getChecksumLocations(metadata: Metadata, upload: Boolean, location: URI): util.List[ChecksumLocation] =
     java.util.Collections.emptyList()
+
 }

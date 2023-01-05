@@ -1,6 +1,5 @@
 package org.apache.maven.repository.internal;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.impl.MetadataGenerator;
@@ -52,7 +51,8 @@ class OverrideVersionsMetadataGenerator
             if (processedVersions.get(key) == null) {
                 VersionsMetadataDelegate versionsMetadata = versions.get(key);
                 if (versionsMetadata == null) {
-                    versionsMetadata = new VersionsMetadataDelegate(new VersionsMetadata(artifact), artifact);
+                    Date date = new Date();
+                    versionsMetadata = new VersionsMetadataDelegate(new VersionsMetadata(artifact, date), artifact);
                     versions.put(key, versionsMetadata);
                 }
             }
