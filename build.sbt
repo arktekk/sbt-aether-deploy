@@ -2,6 +2,7 @@ ThisBuild / organization := "no.arktekk.sbt"
 
 ThisBuild / description := "Deploy in SBT using Sonatype Aether"
 
+ThisBuild / javacOptions := Seq("--release", "8")
 ThisBuild / scalacOptions := Seq("-deprecation", "-unchecked", "-release", "8")
 
 ThisBuild / scriptedLaunchOpts := {
