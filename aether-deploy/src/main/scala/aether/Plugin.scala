@@ -16,8 +16,8 @@ import scala.util.{Failure, Success, Try}
 object AetherKeys {
   val aetherArtifact          = taskKey[AetherArtifact]("Main artifact")
   val aetherCoordinates       = settingKey[MavenCoordinates]("Internal coordinates")
-  val aetherDeploy            = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.").tag(Tags.Publish)
-  val aetherInstall           = TaskKey[Unit]("aether-install", "Installs to a local maven repository.").tag(Tags.Publish)
+  val aetherDeploy            = TaskKey[Unit]("aether-deploy", "Deploys to a maven repository.")
+  val aetherInstall           = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
   val aetherPackageMain       = taskKey[File]("package main Artifact")
   val aetherLocalRepo         = settingKey[File]("Local maven repository.")
   val aetherOldVersionMethod  = settingKey[Boolean]("Flag for using the old method of getting the version")
@@ -91,11 +91,11 @@ object AetherPlugin extends AutoPlugin {
     } else {
       Def.task(())
     }
-  }.value
+  }.tag(Tags.Publish).value
 
-  lazy val installTask = aetherInstall := {
+  lazy val installTask = aetherInstall := Def.task {
     installIt(aetherArtifact.value, aetherLocalRepo.value)(streams.value)
-  }
+  }.tag(Tags.Publish).value
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
     val subArtifacts = artifacts
