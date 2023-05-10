@@ -91,11 +91,11 @@ object AetherPlugin extends AutoPlugin {
     } else {
       Def.task(())
     }
-  }.tag(Tags.Publish).value
+  }.tag(Tags.Publish, Tags.Network).value
 
   lazy val installTask = aetherInstall := Def.task {
     installIt(aetherArtifact.value, aetherLocalRepo.value)(streams.value)
-  }.tag(Tags.Publish).value
+  }.tag(Tags.Publish, Tags.Network).value
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
     val subArtifacts = artifacts
