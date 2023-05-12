@@ -74,28 +74,34 @@ object AetherPlugin extends AutoPlugin {
     else coords
   }
 
-  lazy val deployTask = aetherDeploy := Def.taskDyn {
-    val _skip     = (publish / skip).value
-    val doPublish = (Compile / publishArtifact).value
-    if (doPublish && !_skip) {
-      Def.task {
-        deployIt(
-          publishTo.value,
-          aetherLocalRepo.value,
-          aetherArtifact.value,
-          sbtPlugin.value,
-          credentials.value,
-          aetherCustomHttpHeaders.value
-        )(streams.value)
+  lazy val deployTask = aetherDeploy := Def
+    .taskDyn {
+      val _skip     = (publish / skip).value
+      val doPublish = (Compile / publishArtifact).value
+      if (doPublish && !_skip) {
+        Def.task {
+          deployIt(
+            publishTo.value,
+            aetherLocalRepo.value,
+            aetherArtifact.value,
+            sbtPlugin.value,
+            credentials.value,
+            aetherCustomHttpHeaders.value
+          )(streams.value)
+        }
+      } else {
+        Def.task(())
       }
-    } else {
-      Def.task(())
     }
-  }.value
+    .tag(Tags.Publish, Tags.Network)
+    .value
 
-  lazy val installTask = aetherInstall := {
-    installIt(aetherArtifact.value, aetherLocalRepo.value)(streams.value)
-  }
+  lazy val installTask = aetherInstall := Def
+    .task {
+      installIt(aetherArtifact.value, aetherLocalRepo.value)(streams.value)
+    }
+    .tag(Tags.Publish, Tags.Network)
+    .value
 
   def createArtifact(artifacts: Map[Artifact, sbt.File], coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
     val subArtifacts = artifacts
