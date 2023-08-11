@@ -127,10 +127,8 @@ object AetherPlugin extends AutoPlugin {
       coords: MavenCoordinates,
       mainArtifact: File
   ): AetherArtifact = {
-    artifacts.foreach(println)
-
     val prefiltered = artifacts.filterNot { case (a, f) =>
-      a.name == coords.artifactId && legacyPlugin || mainArtifact == f || (a.classifier.isEmpty && a.extension == "jar")
+      (a.name == coords.artifactId && coords.isPlugin && legacyPlugin) || mainArtifact == f || (a.classifier.isEmpty && a.extension == "jar")
     }
 
     val subArtifacts = prefiltered.map { case (art, f) =>
