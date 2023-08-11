@@ -4,15 +4,20 @@ package internal
 import java.io.File
 import org.apache.maven.repository.internal.{
   DefaultArtifactDescriptorReader,
+  DefaultModelCacheFactory,
   DefaultVersionRangeResolver,
   DefaultVersionResolver,
+  ModelCacheFactory,
   OverrideSnapshotMetadataGeneratorFactory,
-  OverrideVersionsMetadataGeneratorFactory
+  OverrideVersionsMetadataGeneratorFactory,
+  SnapshotMetadataGeneratorFactory,
+  VersionsMetadataGeneratorFactory
 }
 import org.eclipse.aether.deployment.DeployRequest
 import org.eclipse.aether.{ConfigurationProperties, DefaultRepositorySystemSession, RepositorySystem}
 import org.eclipse.aether.impl.*
 import org.eclipse.aether.installation.InstallRequest
+import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory
 import org.eclipse.aether.repository.{LocalRepository, ProxySelector}
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory
@@ -29,19 +34,28 @@ import scala.util.Try
 object Booter {
 
   @nowarn("cat=deprecation")
-  private def newRepositorySystem(): RepositorySystem = {
+  private def newRepositorySystem(legacyPluginLayout: Boolean): RepositorySystem = {
     val locator = new DefaultServiceLocator()
-    locator.addService(classOf[RepositoryLayoutFactory], classOf[SbtPluginLayoutFactory])
     locator.addService(classOf[VersionResolver], classOf[DefaultVersionResolver])
     locator.addService(classOf[VersionRangeResolver], classOf[DefaultVersionRangeResolver])
-    locator.addService(classOf[ArtifactDescriptorReader], classOf[DefaultArtifactDescriptorReader])
+    locator.addService(classOf[ModelCacheFactory], classOf[DefaultModelCacheFactory])
+
     locator.addService(
       classOf[RepositoryConnectorFactory],
       classOf[org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory]
     )
     locator.setServices(classOf[ProxySelector], SystemPropertyProxySelector())
-    locator.addService(classOf[MetadataGeneratorFactory], classOf[OverrideSnapshotMetadataGeneratorFactory])
-    locator.addService(classOf[MetadataGeneratorFactory], classOf[OverrideVersionsMetadataGeneratorFactory])
+
+    if (legacyPluginLayout) {
+      locator.addService(classOf[MetadataGeneratorFactory], classOf[OverrideSnapshotMetadataGeneratorFactory])
+      locator.addService(classOf[MetadataGeneratorFactory], classOf[OverrideVersionsMetadataGeneratorFactory])
+      locator.addService(classOf[RepositoryLayoutFactory], classOf[SbtPluginLayoutFactory])
+    } else {
+      locator.addService(classOf[MetadataGeneratorFactory], classOf[SnapshotMetadataGeneratorFactory])
+      locator.addService(classOf[MetadataGeneratorFactory], classOf[VersionsMetadataGeneratorFactory])
+      locator.addService(classOf[RepositoryLayoutFactory], classOf[Maven2RepositoryLayoutFactory])
+    }
+    locator.addService(classOf[ArtifactDescriptorReader], classOf[DefaultArtifactDescriptorReader])
 
     addTransporterFactories(locator)
 
@@ -58,22 +72,24 @@ object Booter {
   }
 
   private def init(
+      legacyPluginLayout: Boolean,
       localRepoDir: File,
       streams: TaskStreams[_],
       coordinates: MavenCoordinates
   ): (RepositorySystem, DefaultRepositorySystemSession) = {
-    val system = newRepositorySystem()
+    val system = newRepositorySystem(legacyPluginLayout)
     system -> newSession(system, localRepoDir, streams, coordinates)
   }
 
   def deploy(
+      legacyPluginLayout: Boolean,
       localRepoDir: File,
       streams: TaskStreams[_],
       coordinates: MavenCoordinates,
       customHeaders: Map[String, String],
       request: DeployRequest
   ): Try[Unit] = Try {
-    val (system, session) = init(localRepoDir, streams, coordinates)
+    val (system, session) = init(legacyPluginLayout, localRepoDir, streams, coordinates)
     if (customHeaders.nonEmpty) {
       session
         .setConfigProperty(ConfigurationProperties.HTTP_HEADERS + "." + request.getRepository.getId, mapAsJavaMap(customHeaders))
@@ -82,12 +98,13 @@ object Booter {
   }
 
   def install(
+      legacyPluginLayout: Boolean,
       localRepoDir: File,
       streams: TaskStreams[_],
       coordinates: MavenCoordinates,
       request: InstallRequest
   ): Try[Unit] = Try {
-    val (system, session) = init(localRepoDir, streams, coordinates)
+    val (system, session) = init(legacyPluginLayout, localRepoDir, streams, coordinates)
     system.install(session, request)
   }
 

@@ -1,8 +1,8 @@
 ThisBuild / version := "0.1"
 
-name := "sbt-plugin"
+name := "sbt-plugin-legacy"
 
-organization := "sbt-plugin"
+organization := "legacy"
 
 enablePlugins(SbtPlugin)
 
@@ -10,4 +10,4 @@ publishTo := Some("foo" at (file(".") / "target" / "repo").toURI.toURL.toString)
 
 overridePublishSettings
 
-aether.AetherKeys.aetherLegacyPluginStyle := false
+aether.AetherKeys.aetherLegacyPluginStyle := true

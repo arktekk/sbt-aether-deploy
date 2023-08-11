@@ -22,6 +22,11 @@ object AetherKeys {
   val aetherLocalRepo         = settingKey[File]("Local maven repository.")
   val aetherOldVersionMethod  = settingKey[Boolean]("Flag for using the old method of getting the version")
   val aetherCustomHttpHeaders = settingKey[Map[String, String]]("Add these headers to the http request")
+  val aetherLegacyPluginStyle =
+    SettingKey[Boolean](
+      "sbtPluginPublishLegacyMavenStyle",
+      "Configuration for generating the legacy pom of sbt plugins, to publish to Maven"
+    )
 }
 
 import AetherKeys._
@@ -31,7 +36,12 @@ object AetherPlugin extends AutoPlugin {
   override def requires        = sbt.plugins.IvyPlugin
   override def projectSettings = aetherBaseSettings ++ Seq(
     aetherArtifact := {
-      createArtifact((Compile / packagedArtifacts).value, aetherCoordinates.value, aetherPackageMain.value)
+      createArtifact(
+        (Compile / packagedArtifacts).value,
+        (aetherLegacyPluginStyle ?? true).value,
+        aetherCoordinates.value,
+        aetherPackageMain.value
+      )
     }
   )
 
@@ -64,10 +74,17 @@ object AetherPlugin extends AutoPlugin {
     val art        = artifact.value
     val theVersion = (aetherDeploy / version).value
 
+    val legacyPluginLayout = (aetherLegacyPluginStyle ?? true).value
+    val defaultArtifactId  =
+      CrossVersion(crossVersion.value, scalaVersion.value, scalaBinaryVersion.value).map(_(art.name)) getOrElse art.name
+
     val artifactId =
-      if (!sbtPlugin.value)
-        CrossVersion(crossVersion.value, scalaVersion.value, scalaBinaryVersion.value).map(_(art.name)) getOrElse art.name
-      else art.name
+      if (sbtPlugin.value)
+        if (legacyPluginLayout) art.name
+        else {
+          "%s_%s".format(defaultArtifactId, (pluginCrossBuild / sbtBinaryVersion).value)
+        }
+      else defaultArtifactId
     val coords     = MavenCoordinates(organization.value, artifactId, theVersion, None, art.extension)
     if (sbtPlugin.value)
       coords.sbtPlugin().withSbtVersion((pluginCrossBuild / sbtBinaryVersion).value).withScalaVersion(scalaBinaryVersion.value)
@@ -84,6 +101,7 @@ object AetherPlugin extends AutoPlugin {
             publishTo.value,
             aetherLocalRepo.value,
             aetherArtifact.value,
+            (aetherLegacyPluginStyle ?? true).value,
             sbtPlugin.value,
             credentials.value,
             aetherCustomHttpHeaders.value
@@ -98,24 +116,38 @@ object AetherPlugin extends AutoPlugin {
 
   lazy val installTask = aetherInstall := Def
     .task {
-      installIt(aetherArtifact.value, aetherLocalRepo.value)(streams.value)
+      installIt(aetherArtifact.value, aetherLocalRepo.value, (aetherLegacyPluginStyle ?? true).value)(streams.value)
     }
     .tag(Tags.Publish, Tags.Network)
     .value
 
-  def createArtifact(artifacts: Map[Artifact, sbt.File], coords: MavenCoordinates, mainArtifact: File): AetherArtifact = {
-    val subArtifacts = artifacts
-      .filterNot { case (a, f) => a.classifier.isEmpty && f == mainArtifact }
-      .map { case (a, f) => AetherSubArtifact(f, a.classifier, a.extension) }
-      .toSeq
+  def createArtifact(
+      artifacts: Map[Artifact, sbt.File],
+      legacyPlugin: Boolean,
+      coords: MavenCoordinates,
+      mainArtifact: File
+  ): AetherArtifact = {
+    artifacts.foreach(println)
+
+    val prefiltered = artifacts.filterNot { case (a, f) =>
+      a.name == coords.artifactId && legacyPlugin || mainArtifact == f || (a.classifier.isEmpty && a.extension == "jar")
+    }
+
+    val subArtifacts = prefiltered.map { case (art, f) =>
+      AetherSubArtifact(f, art.classifier, art.extension)
+    }.toList
 
     val realCoords = coords.withExtension(mainArtifact)
 
     AetherArtifact(mainArtifact, realCoords, subArtifacts)
   }
 
-  private def toRepository(repo: MavenRepository, plugin: Boolean, credentials: Option[DirectCredentials]): RemoteRepository = {
-    val builder: Builder     = new Builder(repo.name, if (plugin) "sbt-plugin" else "default", repo.root)
+  private def toRepository(
+      repo: MavenRepository,
+      overridePluginType: Boolean,
+      credentials: Option[DirectCredentials]
+  ): RemoteRepository = {
+    val builder: Builder     = new Builder(repo.name, if (overridePluginType) "sbt-plugin" else "default", repo.root)
     credentials.foreach { c =>
       builder.setAuthentication(new AuthenticationBuilder().addUsername(c.userName).addPassword(c.passwd).build())
     }
@@ -128,6 +160,7 @@ object AetherPlugin extends AutoPlugin {
       repo: Option[Resolver],
       localRepo: File,
       artifact: AetherArtifact,
+      legacyPluginLayout: Boolean,
       plugin: Boolean,
       cred: Seq[Credentials],
       customHeaders: Map[String, String]
@@ -151,12 +184,12 @@ object AetherPlugin extends AutoPlugin {
     }.toOption.flatten
 
     val request = new DeployRequest()
-    request.setRepository(toRepository(repository, plugin, maybeCred))
+    request.setRepository(toRepository(repository, plugin && legacyPluginLayout, maybeCred))
     val parent  = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
-    Booter.deploy(localRepo, stream, artifact.coordinates, customHeaders, request) match {
+    Booter.deploy(legacyPluginLayout, localRepo, stream, artifact.coordinates, customHeaders, request) match {
       case Success(_)  => ()
       case Failure(ex) =>
         ex.printStackTrace()
@@ -164,14 +197,14 @@ object AetherPlugin extends AutoPlugin {
     }
   }
 
-  def installIt(artifact: AetherArtifact, localRepo: File)(implicit streams: TaskStreams) {
+  def installIt(artifact: AetherArtifact, localRepo: File, legacyPluginLayout: Boolean)(implicit streams: TaskStreams) {
 
     val request = new InstallRequest()
     val parent  = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
-    Booter.install(localRepo, streams, artifact.coordinates, request) match {
+    Booter.install(legacyPluginLayout, localRepo, streams, artifact.coordinates, request) match {
       case Success(_)  => ()
       case Failure(ex) =>
         ex.printStackTrace()
