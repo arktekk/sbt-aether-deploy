@@ -17,8 +17,8 @@ lazy val aetherDeploy = (project in file("aether-deploy"))
   .settings(
     name := "aether-deploy",
     libraryDependencies ++= {
-      val mavenVersion = "3.8.7"
-      val mavenResolverVersion = "1.9.2"
+      val mavenVersion = "3.9.4"
+      val mavenResolverVersion = "1.9.15"
       Seq(
         "org.apache.maven" % "maven-resolver-provider" % mavenVersion,
         "org.apache.maven.resolver" % "maven-resolver-api" % mavenResolverVersion,

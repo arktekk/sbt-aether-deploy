@@ -3,7 +3,11 @@
 $ exists target/repo/sbt-plugin
 $ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/maven-metadata.xml
 $ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/
-$ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1.jar
-$ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1.pom
-$ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1-sources.jar
-$ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1-javadoc.jar
+$ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin_2.12_1.0-0.1.jar
+$ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin_2.12_1.0-0.1.pom
+$ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin_2.12_1.0-0.1-sources.jar
+$ exists target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin_2.12_1.0-0.1-javadoc.jar
+$ absent target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1.jar
+$ absent target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1.pom
+$ absent target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1-sources.jar
+$ absent target/repo/sbt-plugin/sbt-plugin_2.12_1.0/0.1/sbt-plugin-0.1-javadoc.jar
