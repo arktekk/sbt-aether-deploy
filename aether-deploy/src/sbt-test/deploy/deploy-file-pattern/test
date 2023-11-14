@@ -1,0 +1,7 @@
+# Deploy to file url
+> aetherDeploy
+$ exists target/repo/deploy-file-pattern
+$ exists target/repo/deploy-file-pattern/deploy-file-pattern_3/maven-metadata.xml
+$ exists target/repo/deploy-file-pattern/deploy-file-pattern_3/0.1/
+$ exists target/repo/deploy-file-pattern/deploy-file-pattern_3/0.1/deploy-file-pattern_3-0.1.jar
+$ exists target/repo/deploy-file-pattern/deploy-file-pattern_3/0.1/deploy-file-pattern_3-0.1.pom

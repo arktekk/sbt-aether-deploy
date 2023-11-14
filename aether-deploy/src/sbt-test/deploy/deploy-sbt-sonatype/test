@@ -1,0 +1,9 @@
+# Deploy to file url
+> aetherDeploy
+$ exists target/sonatype-staging/0.1/deploy-sbt-sonatype
+$ exists target/sonatype-staging/0.1/deploy-sbt-sonatype/deploy-sbt-sonatype_3/maven-metadata.xml
+$ exists target/sonatype-staging/0.1/deploy-sbt-sonatype/deploy-sbt-sonatype_3/
+$ exists target/sonatype-staging/0.1/deploy-sbt-sonatype/deploy-sbt-sonatype_3/0.1/deploy-sbt-sonatype_3-0.1.jar
+$ exists target/sonatype-staging/0.1/deploy-sbt-sonatype/deploy-sbt-sonatype_3/0.1/deploy-sbt-sonatype_3-0.1-javadoc.jar
+$ exists target/sonatype-staging/0.1/deploy-sbt-sonatype/deploy-sbt-sonatype_3/0.1/deploy-sbt-sonatype_3-0.1-sources.jar
+$ exists target/sonatype-staging/0.1/deploy-sbt-sonatype/deploy-sbt-sonatype_3/0.1/deploy-sbt-sonatype_3-0.1.pom

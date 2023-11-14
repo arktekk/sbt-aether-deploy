@@ -141,11 +141,11 @@ object AetherPlugin extends AutoPlugin {
   }
 
   private def toRepository(
-      repo: MavenRepository,
+      repo: RepoRef,
       overridePluginType: Boolean,
       credentials: Option[DirectCredentials]
   ): RemoteRepository = {
-    val builder: Builder     = new Builder(repo.name, if (overridePluginType) "sbt-plugin" else "default", repo.root)
+    val builder: Builder     = new Builder(repo.name, if (overridePluginType) "sbt-plugin" else "default", repo.url.toString)
     credentials.foreach { c =>
       builder.setAuthentication(new AuthenticationBuilder().addUsername(c.userName).addPassword(c.passwd).build())
     }
@@ -165,15 +165,32 @@ object AetherPlugin extends AutoPlugin {
   )(implicit
       stream: TaskStreams
   ) {
+    object IsPatternMavenRepo {
+      def unapply(resolver: Resolver): Option[(sbt.PatternsBasedRepository, String)] = {
+        resolver match {
+          case repository: FileRepository if repository.patterns.isMavenCompatible =>
+            repository.patterns.artifactPatterns.headOption
+              .flatMap { pattern =>
+                val idx = pattern.indexOf(Resolver.mavenStyleBasePattern)
+                if (idx > 0) Some(pattern.substring(0, idx - 1))
+                else None
+              }
+              .map(repository -> _)
+          case _                                                                   => None
+        }
+      }
+    }
+
     val repository = repo
       .collect {
-        case x: MavenRepository => x
-        case x                  => sys.error("The configured repo MUST be a maven repo, but was: " + x)
+        case x: MavenRepository            => RepoRef(x.name, URI.create(x.root))
+        case IsPatternMavenRepo((x, root)) => RepoRef(x.name, URI.create(if (root.startsWith("/")) "file:" + root else root))
+        case x                             => sys.error("The configured repo MUST be a maven compatible repo, but was: " + x)
       }
       .getOrElse(sys.error("There MUST be a configured publish repo"))
 
     val maybeCred = Try {
-      val href = URI.create(repository.root)
+      val href = repository.url
       val c    = Credentials.forHost(cred, href.getHost)
       if (c.isEmpty && href.getHost != null) {
         stream.log.warn("No credentials supplied for %s".format(href.getHost))
@@ -209,4 +226,6 @@ object AetherPlugin extends AutoPlugin {
         throw ex
     }
   }
+
+  case class RepoRef(name: String, url: URI)
 }
