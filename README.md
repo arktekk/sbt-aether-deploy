@@ -6,11 +6,11 @@ The same behaviour as Maven should be expected.
 ## project/plugins.sbt
 
 ```scala
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.29.0")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.29.1")
 
 /** OR **/
 
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.29.0") // For sbt-pgp 2.x support
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.29.1") // For sbt-pgp 2.x support
 ```
 
 # Breaking Changes
