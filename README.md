@@ -6,14 +6,18 @@ The same behaviour as Maven should be expected.
 ## project/plugins.sbt
 
 ```scala
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.29.1")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.30.0")
 
 /** OR **/
 
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.29.1") // For sbt-pgp 2.x support
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.30.0") // For sbt-pgp 2.x support
 ```
 
 # Breaking Changes
+
+## 0.30.0
+Only support new plugin layouts
+Remove aetherOldVersionMethod key
 
 ## 0.29.0
 Support both old and new plugin layouts

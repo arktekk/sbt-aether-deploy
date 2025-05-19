@@ -11,7 +11,6 @@ import java.net.URI
 import org.eclipse.aether.repository.RemoteRepository.Builder
 import org.eclipse.aether.util.repository.AuthenticationBuilder
 
-import scala.annotation.nowarn
 import scala.util.{Failure, Success, Try}
 
 object AetherKeys {
@@ -22,12 +21,6 @@ object AetherKeys {
   val aetherPackageMain       = taskKey[File]("package main Artifact")
   val aetherLocalRepo         = settingKey[File]("Local maven repository.")
   val aetherCustomHttpHeaders = settingKey[Map[String, String]]("Add these headers to the http request")
-  @deprecated
-  val aetherLegacyPluginStyle =
-    SettingKey[Boolean](
-      "sbtPluginPublishLegacyMavenStyle",
-      "No longer supported"
-    )
 }
 
 import AetherKeys._
@@ -55,7 +48,6 @@ object AetherPlugin extends AutoPlugin {
     def overridePublishBothSettings: Seq[Setting[_]]  = overridePublishSettings ++ overridePublishLocalSettings
   }
 
-  @nowarn("cat=deprecation")
   lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
     aetherLocalRepo := Path.userHome / ".m2" / "repository",
     defaultCoordinates,
@@ -64,7 +56,7 @@ object AetherPlugin extends AutoPlugin {
     aetherPackageMain := {
       (Compile / Keys.`package`).value
     },
-    aetherLegacyPluginStyle := false,
+    sbtPluginPublishLegacyMavenStyle := false,
     aetherDeploy / version := (ThisBuild / version).value,
     aetherDeploy / logLevel := Level.Debug,
     aetherCustomHttpHeaders := Map.empty[String, String]
