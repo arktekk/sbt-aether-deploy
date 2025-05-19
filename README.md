@@ -15,7 +15,7 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.30.0") // For sbt-pg
 
 # Breaking Changes
 
-## 0.30.0
+## 0.30.0 (unreleased)
 Only support new plugin layouts
 Remove aetherOldVersionMethod key
 
