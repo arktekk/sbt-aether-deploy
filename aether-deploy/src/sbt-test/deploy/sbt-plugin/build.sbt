@@ -9,5 +9,3 @@ enablePlugins(SbtPlugin)
 publishTo := Some("foo" at (file(".") / "target" / "repo").toURI.toURL.toString)
 
 overridePublishSettings
-
-aether.AetherKeys.aetherLegacyPluginStyle := false

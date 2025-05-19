@@ -13,8 +13,8 @@ enablePlugins(SbtPlugin)
 pomIncludeRepository := { _ => false }
 
 publishTo := {
-  if (isSnapshot.value) Some(("snapshots" at "http://localhost:19999/repository/maven-snapshots/").withAllowInsecureProtocol(true))
-  else Some(("releases" at "http://localhost:19999/repository/maven-releases/").withAllowInsecureProtocol(true))
+  if (isSnapshot.value) Some(("snapshots" at "http://localhost:19999/snapshots/").withAllowInsecureProtocol(true))
+  else Some(("releases" at "http://localhost:19999/releases/").withAllowInsecureProtocol(true))
 }
 
 publishMavenStyle := true

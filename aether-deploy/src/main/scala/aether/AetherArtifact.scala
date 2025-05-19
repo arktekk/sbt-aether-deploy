@@ -25,8 +25,6 @@ case class MavenCoordinates(
     if (ext == extension) this else copy(extension = ext)
   }
 
-  def isPlugin = props.contains(MavenCoordinates.SbtPlugin)
-
   def withProp(name: String, value: String) = copy(props = props.updated(name, value))
 }
 
