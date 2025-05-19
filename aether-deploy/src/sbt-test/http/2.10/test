@@ -1,4 +1,4 @@
 # Deploy to http url
 $ exec ./init.sh
 > publish
-$ exec docker stop nexus
+$ exec docker stop reposilite

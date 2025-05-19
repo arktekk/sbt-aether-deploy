@@ -5,12 +5,13 @@ import sbt._
 import Keys.{version, _}
 import org.eclipse.aether.deployment.DeployRequest
 import org.eclipse.aether.installation.InstallRequest
-import org.eclipse.aether.repository.{Proxy, RemoteRepository}
-import java.net.URI
+import org.eclipse.aether.repository.RemoteRepository
 
+import java.net.URI
 import org.eclipse.aether.repository.RemoteRepository.Builder
 import org.eclipse.aether.util.repository.AuthenticationBuilder
 
+import scala.annotation.nowarn
 import scala.util.{Failure, Success, Try}
 
 object AetherKeys {
@@ -20,12 +21,12 @@ object AetherKeys {
   val aetherInstall           = TaskKey[Unit]("aether-install", "Installs to a local maven repository.")
   val aetherPackageMain       = taskKey[File]("package main Artifact")
   val aetherLocalRepo         = settingKey[File]("Local maven repository.")
-  val aetherOldVersionMethod  = settingKey[Boolean]("Flag for using the old method of getting the version")
   val aetherCustomHttpHeaders = settingKey[Map[String, String]]("Add these headers to the http request")
+  @deprecated
   val aetherLegacyPluginStyle =
     SettingKey[Boolean](
       "sbtPluginPublishLegacyMavenStyle",
-      "Configuration for generating the legacy pom of sbt plugins, to publish to Maven"
+      "No longer supported"
     )
 }
 
@@ -38,7 +39,6 @@ object AetherPlugin extends AutoPlugin {
     aetherArtifact := {
       createArtifact(
         (Compile / packagedArtifacts).value,
-        (aetherLegacyPluginStyle ?? true).value,
         aetherCoordinates.value,
         aetherPackageMain.value
       )
@@ -55,8 +55,8 @@ object AetherPlugin extends AutoPlugin {
     def overridePublishBothSettings: Seq[Setting[_]]  = overridePublishSettings ++ overridePublishLocalSettings
   }
 
+  @nowarn("cat=deprecation")
   lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
-    //aetherWagons := Seq.empty,
     aetherLocalRepo := Path.userHome / ".m2" / "repository",
     defaultCoordinates,
     deployTask,
@@ -64,8 +64,8 @@ object AetherPlugin extends AutoPlugin {
     aetherPackageMain := {
       (Compile / Keys.`package`).value
     },
-    aetherOldVersionMethod := false,
-    aetherDeploy / version := { if (aetherOldVersionMethod.value) version.value else (ThisBuild / version).value },
+    aetherLegacyPluginStyle := false,
+    aetherDeploy / version := (ThisBuild / version).value,
     aetherDeploy / logLevel := Level.Debug,
     aetherCustomHttpHeaders := Map.empty[String, String]
   )
@@ -74,16 +74,11 @@ object AetherPlugin extends AutoPlugin {
     val art        = artifact.value
     val theVersion = (aetherDeploy / version).value
 
-    val legacyPluginLayout = (aetherLegacyPluginStyle ?? true).value
-    val defaultArtifactId  =
+    val defaultArtifactId =
       CrossVersion(crossVersion.value, scalaVersion.value, scalaBinaryVersion.value).map(_(art.name)) getOrElse art.name
 
     val artifactId =
-      if (sbtPlugin.value)
-        if (legacyPluginLayout) art.name
-        else {
-          "%s_%s".format(defaultArtifactId, (pluginCrossBuild / sbtBinaryVersion).value)
-        }
+      if (sbtPlugin.value) "%s_%s".format(defaultArtifactId, (pluginCrossBuild / sbtBinaryVersion).value)
       else defaultArtifactId
     val coords     = MavenCoordinates(organization.value, artifactId, theVersion, None, art.extension)
     if (sbtPlugin.value)
@@ -101,8 +96,6 @@ object AetherPlugin extends AutoPlugin {
             publishTo.value,
             aetherLocalRepo.value,
             aetherArtifact.value,
-            (aetherLegacyPluginStyle ?? true).value,
-            sbtPlugin.value,
             credentials.value,
             aetherCustomHttpHeaders.value
           )(streams.value)
@@ -116,19 +109,18 @@ object AetherPlugin extends AutoPlugin {
 
   lazy val installTask = aetherInstall := Def
     .task {
-      installIt(aetherArtifact.value, aetherLocalRepo.value, (aetherLegacyPluginStyle ?? true).value)(streams.value)
+      installIt(aetherArtifact.value, aetherLocalRepo.value)(streams.value)
     }
     .tag(Tags.Publish, Tags.Network)
     .value
 
   def createArtifact(
       artifacts: Map[Artifact, sbt.File],
-      legacyPlugin: Boolean,
       coords: MavenCoordinates,
       mainArtifact: File
   ): AetherArtifact = {
     val prefiltered = artifacts.filterNot { case (a, f) =>
-      (a.name == coords.artifactId && coords.isPlugin && legacyPlugin) || mainArtifact == f || (a.classifier.isEmpty && a.extension == "jar")
+      mainArtifact == f || (a.classifier.isEmpty && a.extension == "jar")
     }
 
     val subArtifacts = prefiltered.map { case (art, f) =>
@@ -142,15 +134,13 @@ object AetherPlugin extends AutoPlugin {
 
   private def toRepository(
       repo: RepoRef,
-      overridePluginType: Boolean,
       credentials: Option[DirectCredentials]
   ): RemoteRepository = {
-    val builder: Builder     = new Builder(repo.name, if (overridePluginType) "sbt-plugin" else "default", repo.url.toString)
+    val builder: Builder = new Builder(repo.name, "default", repo.url.toString)
     credentials.foreach { c =>
+      println(c)
       builder.setAuthentication(new AuthenticationBuilder().addUsername(c.userName).addPassword(c.passwd).build())
     }
-    val proxy: Option[Proxy] = Option(SystemPropertyProxySelector.selector.getProxy(builder.build()))
-    proxy.foreach(p => builder.setProxy(p))
     builder.build()
   }
 
@@ -158,8 +148,6 @@ object AetherPlugin extends AutoPlugin {
       repo: Option[Resolver],
       localRepo: File,
       artifact: AetherArtifact,
-      legacyPluginLayout: Boolean,
-      plugin: Boolean,
       cred: Seq[Credentials],
       customHeaders: Map[String, String]
   )(implicit
@@ -199,12 +187,12 @@ object AetherPlugin extends AutoPlugin {
     }.toOption.flatten
 
     val request = new DeployRequest()
-    request.setRepository(toRepository(repository, plugin && legacyPluginLayout, maybeCred))
+    request.setRepository(toRepository(repository, maybeCred))
     val parent  = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
-    Booter.deploy(legacyPluginLayout, localRepo, stream, artifact.coordinates, customHeaders, request) match {
+    Booter.deploy(localRepo, stream, artifact.coordinates, customHeaders, request) match {
       case Success(_)  => ()
       case Failure(ex) =>
         ex.printStackTrace()
@@ -212,14 +200,14 @@ object AetherPlugin extends AutoPlugin {
     }
   }
 
-  def installIt(artifact: AetherArtifact, localRepo: File, legacyPluginLayout: Boolean)(implicit streams: TaskStreams) {
+  def installIt(artifact: AetherArtifact, localRepo: File)(implicit streams: TaskStreams) {
 
     val request = new InstallRequest()
     val parent  = artifact.toArtifact
     request.addArtifact(parent)
     artifact.subartifacts.foreach(s => request.addArtifact(s.toArtifact(parent)))
 
-    Booter.install(legacyPluginLayout, localRepo, streams, artifact.coordinates, request) match {
+    Booter.install(localRepo, streams, artifact.coordinates, request) match {
       case Success(_)  => ()
       case Failure(ex) =>
         ex.printStackTrace()

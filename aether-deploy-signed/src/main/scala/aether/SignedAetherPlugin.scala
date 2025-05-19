@@ -11,7 +11,6 @@ object SignedAetherPlugin extends AutoPlugin {
     aetherArtifact := {
       AetherPlugin.createArtifact(
         (Compile / PgpKeys.signedArtifacts).value,
-        (aetherLegacyPluginStyle ?? true).value,
         aetherCoordinates.value,
         aetherPackageMain.value
       )
