@@ -1,22 +1,3 @@
-ThisBuild / packageOptions += {
-  val title  = name.value
-  val ver    = version.value
-  val vendor = organization.value
-
-  Package.ManifestAttributes(
-    "Created-By"               -> "Simple Build Tool",
-    "Built-By"                 -> System.getProperty("user.name"),
-    "Build-Jdk"                -> System.getProperty("java.version"),
-    "Specification-Title"      -> title,
-    "Specification-Version"    -> ver,
-    "Specification-Vendor"     -> vendor,
-    "Implementation-Title"     -> title,
-    "Implementation-Version"   -> ver,
-    "Implementation-Vendor-Id" -> vendor,
-    "Implementation-Vendor"    -> vendor
-  )
-}
-
 ThisBuild / credentials += Credentials(Path.userHome / ".sbt" / "arktekk-credentials")
 
 ThisBuild / pomIncludeRepository := { x =>
@@ -24,11 +5,9 @@ ThisBuild / pomIncludeRepository := { x =>
 }
 
 ThisBuild / publishTo := {
-  if (version.value.trim().endsWith("SNAPSHOT")) {
-    Opts.resolver.sonatypeOssSnapshots.headOption
-  } else {
-    Some(Opts.resolver.sonatypeStaging)
-  }
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+  if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+  else localStaging.value
 }
 
 // Things we care about primarily because Maven Central demands them
