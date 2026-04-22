@@ -1,8 +1,12 @@
 package aether
 
 import java.io.File
+
 import org.eclipse.aether.util.artifact.SubArtifact
 import org.eclipse.aether.artifact.DefaultArtifact
+
+import sbtcompat.PluginCompat
+import xsbti.FileConverter
 
 case class MavenCoordinates(
     groupId: String,
@@ -50,9 +54,9 @@ case class AetherSubArtifact(file: File, classifier: Option[String] = None, exte
 
 case class AetherArtifact(file: File, coordinates: MavenCoordinates, subartifacts: Seq[AetherSubArtifact] = Nil) {
 
-  def attach(file: File, classifier: String, extension: String = "jar") = {
-    copy(subartifacts = subartifacts :+ AetherSubArtifact(file, Some(classifier), extension))
-  }
+  def attach(ref: PluginCompat.FileRef, classifier: String, extension: String = "jar")
+            (implicit conv: FileConverter): AetherArtifact =
+    copy(subartifacts = subartifacts :+ AetherSubArtifact(PluginCompat.toFile(ref), Some(classifier), extension))
 
   import collection.JavaConverters._
   def toArtifact = new DefaultArtifact(

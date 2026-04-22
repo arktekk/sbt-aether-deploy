@@ -1,7 +1,9 @@
 # SBT aether deploy plugin
-Deploys sbt-artifacts using Maven Artifact Provider. 
+Deploys sbt-artifacts using Maven Artifact Provider.
 
 The same behaviour as Maven should be expected.
+
+Cross-built for **sbt 1.x** and **sbt 2.x**.
 
 ## project/plugins.sbt
 
@@ -14,6 +16,22 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.30.0") // For sbt-pg
 ```
 
 # Breaking Changes
+
+## 0.31.0
+
+- Support sbt 2.x.
+- Calling `AetherArtifact.attach` directly requires an implicit `xsbti.FileConverter`
+  in scope. Supply it from the task body:
+
+  ```scala
+  aetherArtifact := {
+    implicit val conv: xsbti.FileConverter = fileConverter.value
+    aetherArtifact.value.attach(myFileTask.value, "classifier", "ext")
+  }
+  ```
+
+  Or use the new [`attachSubArtifact`](#attaching-additional-sub-artefacts) helper,
+  which does not require either.
 
 ## 0.30.0
 Only support new plugin layouts
@@ -110,6 +128,15 @@ overridePublishSignedLocalSettings
 
 ```scala
 overridePublishSignedBothSettings
+```
+
+## Attaching additional sub-artefacts
+
+Attach a packaged-file task (e.g. a zip produced by `Universal / packageBin`) as a
+sub-artefact alongside the main jar:
+
+```scala
+attachSubArtifact(Universal / packageBin, "dist", "zip")
 ```
 
 ## Add credentials

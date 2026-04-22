@@ -12,13 +12,13 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
 
   private var lastLength: Int = 0
 
-  override def transferInitiated(event: TransferEvent) {
+  override def transferInitiated(event: TransferEvent): Unit = {
     val message = if (event.getRequestType == TransferEvent.RequestType.PUT) "Uploading" else "Downloading"
 
     logger.info(message + ": " + event.getResource.getRepositoryUrl + event.getResource.getResourceName)
   }
 
-  override def transferProgressed(event: TransferEvent) {
+  override def transferProgressed(event: TransferEvent): Unit = {
     val resource = event.getResource
     downloads.put(resource, event.getTransferredBytes)
 
@@ -40,7 +40,7 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
     logger.debug(buffer.toString())
   }
 
-  override def transferSucceeded(event: TransferEvent) {
+  override def transferSucceeded(event: TransferEvent): Unit = {
     transferCompleted(event);
 
     val resource      = event.getResource
@@ -64,13 +64,13 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
     }
   }
 
-  override def transferFailed(event: TransferEvent) {
+  override def transferFailed(event: TransferEvent): Unit = {
     transferCompleted(event)
 
     logger.error(event.getException.getMessage)
   }
 
-  private def transferCompleted(event: TransferEvent) {
+  private def transferCompleted(event: TransferEvent): Unit = {
     downloads.remove(event.getResource)
 
     val buffer = new StringBuilder(64)
@@ -79,11 +79,11 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
     logger.info(buffer.toString())
   }
 
-  override def transferCorrupted(event: TransferEvent) {
+  override def transferCorrupted(event: TransferEvent): Unit = {
     logger.error(event.getException.getMessage)
   }
 
-  private def pad(buffer: StringBuilder, spaces: Int) {
+  private def pad(buffer: StringBuilder, spaces: Int): Unit = {
     var thespaces = spaces
     val block     = "                                        "
     while (thespaces > 0) {
