@@ -145,7 +145,7 @@ object AetherPlugin extends AutoPlugin {
     val artifactsAsFiles: Map[Artifact, File] =
       artifacts.map { case (a, v) => a -> PluginCompat.toFile(v) }
 
-    val prefiltered = artifactsAsFiles.filterNot { case (a, f) =>
+    val prefiltered                           = artifactsAsFiles.filterNot { case (a, f) =>
       mainArtifact == f || (a.classifier.isEmpty && a.extension == "jar")
     }
 

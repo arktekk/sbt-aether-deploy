@@ -54,8 +54,9 @@ case class AetherSubArtifact(file: File, classifier: Option[String] = None, exte
 
 case class AetherArtifact(file: File, coordinates: MavenCoordinates, subartifacts: Seq[AetherSubArtifact] = Nil) {
 
-  def attach(ref: PluginCompat.FileRef, classifier: String, extension: String = "jar")
-            (implicit conv: FileConverter): AetherArtifact =
+  def attach(ref: PluginCompat.FileRef, classifier: String, extension: String = "jar")(implicit
+      conv: FileConverter
+  ): AetherArtifact =
     copy(subartifacts = subartifacts :+ AetherSubArtifact(PluginCompat.toFile(ref), Some(classifier), extension))
 
   import collection.JavaConverters._
