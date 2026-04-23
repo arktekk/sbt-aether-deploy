@@ -33,6 +33,15 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.30.0") // For sbt-pg
   Or use the new [`attachSubArtifact`](#attaching-additional-sub-artefacts) helper,
   which does not require either.
 
+- If you call `AetherPlugin.deployIt` or `AetherPlugin.installIt` directly from
+  a custom task, the trailing `TaskStreams` parameter is no longer `implicit` -
+  pass `streams.value` as a regular argument:
+
+  ```scala
+  AetherPlugin.deployIt(repo, localRepo, artifact, creds, headers)(streams.value)
+  AetherPlugin.installIt(artifact, localRepo)(streams.value)
+  ```
+
 ## 0.30.0
 Only support new plugin layouts
 Remove aetherOldVersionMethod key

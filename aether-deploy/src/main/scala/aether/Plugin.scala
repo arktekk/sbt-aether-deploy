@@ -57,16 +57,16 @@ object AetherPlugin extends AutoPlugin {
   )
 
   object autoImport {
-    def overridePublishSettings: Seq[Setting[_]]      = Seq(publish := aetherDeploy.value)
-    def overridePublishLocalSettings: Seq[Setting[_]] =
+    def overridePublishSettings: Seq[Setting[?]]      = Seq(publish := aetherDeploy.value)
+    def overridePublishLocalSettings: Seq[Setting[?]] =
       Seq(publishLocal := {
         publishLocal.value
         aetherInstall.value
       })
-    def overridePublishBothSettings: Seq[Setting[_]]  = overridePublishSettings ++ overridePublishLocalSettings
+    def overridePublishBothSettings: Seq[Setting[?]]  = overridePublishSettings ++ overridePublishLocalSettings
   }
 
-  lazy val aetherBaseSettings: Seq[Setting[_]] = Seq(
+  lazy val aetherBaseSettings: Seq[Setting[?]] = Seq(
     aetherLocalRepo := Path.userHome / ".m2" / "repository",
     defaultCoordinates,
     deployTask,
@@ -164,9 +164,7 @@ object AetherPlugin extends AutoPlugin {
       artifact: AetherArtifact,
       cred: Seq[Credentials],
       customHeaders: Map[String, String]
-  )(implicit
-      stream: sbt.std.TaskStreams[_]
-  ): Unit = {
+  )(stream: sbt.std.TaskStreams[?]): Unit = {
     object IsPatternMavenRepo {
       def unapply(resolver: Resolver): Option[(sbt.PatternsBasedRepository, String)] = {
         resolver match {
@@ -219,7 +217,7 @@ object AetherPlugin extends AutoPlugin {
     }
   }
 
-  def installIt(artifact: AetherArtifact, localRepo: File)(implicit streams: sbt.std.TaskStreams[_]): Unit = {
+  def installIt(artifact: AetherArtifact, localRepo: File)(streams: sbt.std.TaskStreams[?]): Unit = {
 
     val request = new InstallRequest()
     val parent  = artifact.toArtifact

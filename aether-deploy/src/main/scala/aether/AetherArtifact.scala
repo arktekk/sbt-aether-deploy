@@ -59,7 +59,7 @@ case class AetherArtifact(file: File, coordinates: MavenCoordinates, subartifact
   ): AetherArtifact =
     copy(subartifacts = subartifacts :+ AetherSubArtifact(PluginCompat.toFile(ref), Some(classifier), extension))
 
-  import collection.JavaConverters._
+  import scala.jdk.CollectionConverters._
   def toArtifact = new DefaultArtifact(
     coordinates.groupId,
     coordinates.artifactId,

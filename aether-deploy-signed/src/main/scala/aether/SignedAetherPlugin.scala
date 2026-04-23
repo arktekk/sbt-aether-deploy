@@ -22,13 +22,13 @@ object SignedAetherPlugin extends AutoPlugin {
   )
 
   object autoImport {
-    def overridePublishSignedSettings: Seq[Setting[_]]      = Seq(PgpKeys.publishSigned := aetherDeploy.value)
-    def overridePublishSignedLocalSettings: Seq[Setting[_]] =
+    def overridePublishSignedSettings: Seq[Setting[?]]      = Seq(PgpKeys.publishSigned := aetherDeploy.value)
+    def overridePublishSignedLocalSettings: Seq[Setting[?]] =
       Seq(PgpKeys.publishLocalSigned := {
         aetherInstall.value
         PgpKeys.publishLocalSigned.value
       })
-    def overridePublishSignedBothSettings: Seq[Setting[_]]  = overridePublishSignedSettings ++ overridePublishSignedLocalSettings
+    def overridePublishSignedBothSettings: Seq[Setting[?]]  = overridePublishSignedSettings ++ overridePublishSignedLocalSettings
   }
 
 }

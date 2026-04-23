@@ -24,7 +24,7 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
 
     val buffer = new StringBuilder(64)
 
-    import scala.collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
     for (entry <- downloads.entrySet().asScala) {
       val total    = entry.getKey.getContentLength
       val complete = entry.getValue
@@ -47,7 +47,7 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
     val contentLength = event.getTransferredBytes
     if (contentLength >= 0) {
       val t   = if (event.getRequestType == TransferEvent.RequestType.PUT) "Uploaded" else "Downloaded"
-      val len = if (contentLength >= 1024) toKB(contentLength) + " KB" else contentLength + " B"
+      val len = if (contentLength >= 1024) s"${toKB(contentLength)} KB" else s"$contentLength B"
 
       var throughput = ""
       val duration   = System.currentTimeMillis() - resource.getTransferStartTime
@@ -97,13 +97,13 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
 
   private def getStatus(complete: Long, total: Long): String = {
     if (total >= 1024) {
-      toKB(complete) + "/" + toKB(total) + " KB "
+      s"${toKB(complete)}/${toKB(total)} KB "
     } else if (total >= 0) {
-      complete + "/" + total + " B "
+      s"$complete/$total B "
     } else if (complete >= 1024) {
-      toKB(complete) + " KB "
+      s"${toKB(complete)} KB "
     } else {
-      complete + " B "
+      s"$complete B "
     }
   }
 

@@ -27,10 +27,6 @@ lazy val aetherDeploy = (project in file("aether-deploy"))
   .settings(commonSettings)
   .settings(
     name := "aether-deploy",
-    // sbt2-compat provides `sbtcompat.PluginCompat` - a cross-published shim exposing the
-    // sbt 2.x API (FileRef / HashedVirtualFileRef, FileConverter, Def.uncached,
-    // Credentials helpers, etc.) on top of sbt 1.x primitives. Following the pattern
-    // used by sbt-native-packager, this replaces any hand-rolled per-version compat.
     addSbtPlugin("com.github.sbt" % "sbt2-compat" % "0.1.0"),
     libraryDependencies ++= {
       Seq(
@@ -39,7 +35,8 @@ lazy val aetherDeploy = (project in file("aether-deploy"))
         // See arktekk/sbt-aether-deploy#43.
         ("org.apache.maven.resolver" % "maven-resolver-supplier" % "1.9.23")
           .exclude("org.codehaus.plexus", "plexus-utils"),
-        "org.codehaus.plexus"        % "plexus-utils"            % "3.6.0"
+        "org.codehaus.plexus"        % "plexus-utils"            % "3.6.0",
+        "org.scala-lang.modules"    %% "scala-collection-compat" % "2.14.0"
       )
     },
     scriptedDependencies := {
