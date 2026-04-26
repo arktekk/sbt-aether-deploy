@@ -21,7 +21,7 @@ case class MavenCoordinates(
   def sbtPlugin()                 = withProp(MavenCoordinates.SbtPlugin, "true")
   def withScalaVersion(v: String) = withProp(MavenCoordinates.ScalaVersion, v)
   def withSbtVersion(v: String)   = withProp(MavenCoordinates.SbtVersion, v)
-  def withExtension(file: File) = {
+  def withExtension(file: File)   = {
     val ext = {
       val i = file.getName.lastIndexOf(".")
       file.getName.substring(i + 1)

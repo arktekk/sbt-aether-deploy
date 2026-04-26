@@ -26,8 +26,7 @@ object AetherKeys {
   val aetherLocalRepo         = settingKey[File]("Local maven repository.")
   val aetherCustomHttpHeaders = settingKey[Map[String, String]]("Add these headers to the http request")
 
-  /** Attach an additional sub-artefact (sourced from a task that produces a packaged file)
-    * to the main `aetherArtifact`.
+  /** Attach an additional sub-artefact (sourced from a task that produces a packaged file) to the main `aetherArtifact`.
     */
   def attachSubArtifact(
       packageTask: sbt.TaskKey[sbtcompat.PluginCompat.FileRef],
@@ -67,18 +66,18 @@ object AetherPlugin extends AutoPlugin {
   }
 
   lazy val aetherBaseSettings: Seq[Setting[?]] = Seq(
-    aetherLocalRepo := Path.userHome / ".m2" / "repository",
+    aetherLocalRepo                  := Path.userHome / ".m2" / "repository",
     defaultCoordinates,
     deployTask,
     installTask,
-    aetherPackageMain := Def.uncached {
+    aetherPackageMain                := Def.uncached {
       implicit val conv: FileConverter = fileConverter.value
       PluginCompat.toFile((Compile / Keys.`package`).value)
     },
     sbtPluginPublishLegacyMavenStyle := false,
-    aetherDeploy / version := version.value,
-    aetherDeploy / logLevel := Level.Debug,
-    aetherCustomHttpHeaders := Map.empty[String, String]
+    aetherDeploy / version           := version.value,
+    aetherDeploy / logLevel          := Level.Debug,
+    aetherCustomHttpHeaders          := Map.empty[String, String]
   )
 
   def defaultCoordinates = aetherCoordinates := {
@@ -145,7 +144,7 @@ object AetherPlugin extends AutoPlugin {
     val artifactsAsFiles: Map[Artifact, File] =
       artifacts.map { case (a, v) => a -> PluginCompat.toFile(v) }
 
-    val prefiltered                           = artifactsAsFiles.filterNot { case (a, f) =>
+    val prefiltered = artifactsAsFiles.filterNot { case (a, f) =>
       mainArtifact == f || (a.classifier.isEmpty && a.extension == "jar")
     }
 

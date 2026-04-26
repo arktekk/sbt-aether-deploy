@@ -1,7 +1,7 @@
 organization := "no.arktekk.sbt"
-description := "Deploy in SBT using Sonatype Aether"
+description  := "Deploy in SBT using Sonatype Aether"
 
-val platforms: Seq[(scala: String, sbt:String)] = Seq(
+val platforms: Seq[(scala: String, sbt: String)] = Seq(
   (scala = "2.12.21", sbt = "1.11.0"),
   (scala = "3.8.3", sbt = "2.0.0-RC12")
 )
@@ -25,10 +25,10 @@ lazy val aetherDeploy =
           // See arktekk/sbt-aether-deploy#43.
           ("org.apache.maven.resolver" % "maven-resolver-supplier" % "1.9.23")
             .exclude("org.codehaus.plexus", "plexus-utils"),
-          "org.codehaus.plexus" % "plexus-utils" % "3.6.0",
-          "org.scala-lang.modules" %% "scala-collection-compat" % "2.14.0"
+          "org.codehaus.plexus"        % "plexus-utils"            % "3.6.0",
+          "org.scala-lang.modules"    %% "scala-collection-compat" % "2.14.0"
         )
-      },
+      }
     )
 
 lazy val aetherDeploySigned =
@@ -45,7 +45,8 @@ lazy val aetherDeploySigned =
     )
 
 lazy val aetherDeployRoot =
-  projectMatrix.in(file("."))
+  projectMatrix
+    .in(file("."))
     .jvmPlatform(scalaVersions = platforms.map(_.scala))
     .aggregate(aetherDeploy)
     .aggregate(aetherDeploySigned)
@@ -55,10 +56,10 @@ def commonSettings =
   val scala3 = Def.setting(scalaBinaryVersion.value == "3")
   Seq(
     pluginCrossBuild / sbtVersion := platforms.find(_.scala == scalaVersion.value).get.sbt,
-    javacOptions := {
+    javacOptions                  := {
       if (scala3.value) Seq("--release", "17") else Seq("--release", "8")
     },
-    scalacOptions := {
+    scalacOptions                 := {
       val shared = Seq("-deprecation", "-unchecked")
       if (scala3.value) shared :+ "-release:17" else shared :+ "-release:8"
     }
@@ -69,5 +70,5 @@ def scriptedSettings = Seq(
     scriptedLaunchOpts.value ++
       Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
   },
-  scriptedBufferLog := false,
+  scriptedBufferLog  := false
 )

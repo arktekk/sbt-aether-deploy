@@ -35,9 +35,8 @@ private[aether] object SystemPropertyProxySelector {
 
   def apply(): ProxySelector = selector
 
-  /** java -Dhttp.proxyHost=myproxy -Dhttp.proxyPort=8080 \
-    *      -Dhttp.proxyUser=username -Dhttp.proxyPassword=mypassword \
-    *      -Dhttp.nonProxyHosts=
+  /** java -Dhttp.proxyHost=myproxy -Dhttp.proxyPort=8080 \ -Dhttp.proxyUser=username -Dhttp.proxyPassword=mypassword \
+    * -Dhttp.nonProxyHosts=
     * @return
     */
   private def loadProxies(): Option[AProxy] = {
