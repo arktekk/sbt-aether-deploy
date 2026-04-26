@@ -42,6 +42,17 @@ jobs:
         uses: sbt/setup-sbt@v1
       - name: Set up Coursier cache
         uses: coursier/cache-action@v8
+      - name: Generate ephemeral GPG key for signed scripted tests
+        run: |
+          gpg --batch --gen-key <<EOF
+          %no-protection
+          Key-Type: RSA
+          Key-Length: 2048
+          Name-Real: aether-deploy CI
+          Name-Email: ci@aether-deploy.invalid
+          Expire-Date: 0
+          %commit
+          EOF
       - name: "[sbt ${{ matrix.sbt }}.x] Scripted Tests"
         run: sbt aetherDeployRoot${{ matrix.version-suffix }}/scripted
 
@@ -59,7 +70,4 @@ jobs:
       - name: Set up Coursier cache
         uses: coursier/cache-action@v8
       - name: Verify Source Formatting
-        id: scalafmt
         run: sbt "scalafmtCheckAll; scalafmtSbtCheck"
-
-    # Handle gpg signed stuff
