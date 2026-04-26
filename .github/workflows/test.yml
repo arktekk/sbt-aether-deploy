@@ -3,6 +3,7 @@ name: Test
 on:
   push:
     branches: [ '*' ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ master ]
   workflow_dispatch:
@@ -73,3 +74,57 @@ jobs:
         uses: coursier/cache-action@v8
       - name: Verify Source Formatting
         run: sbt "scalafmtCheckAll; scalafmtSbtCheck"
+
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    name: Publish Release
+    needs: [ test, check ]
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up JDK ${{ env.JDK_RELEASE }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JDK_RELEASE }}
+          distribution: temurin
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+      - name: Set up Coursier cache
+        uses: coursier/cache-action@v8
+      - name: Import Signing Key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.SIGNING_KEY }}
+          trust_level: 5
+      - name: Publish Release
+        run: sbt "publishSigned; sonaUpload; sonaRelease"
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: Create GitHub Release
+    needs: [ publish ]
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          prerelease_flag=""
+          if [[ "${{ github.ref_name }}" == *-* ]]; then
+            prerelease_flag="--prerelease"
+          fi
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes \
+            --verify-tag \
+            $prerelease_flag
