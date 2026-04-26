@@ -76,7 +76,7 @@ object AetherPlugin extends AutoPlugin {
       PluginCompat.toFile((Compile / Keys.`package`).value)
     },
     sbtPluginPublishLegacyMavenStyle := false,
-    aetherDeploy / version := (ThisBuild / version).value,
+    aetherDeploy / version := version.value,
     aetherDeploy / logLevel := Level.Debug,
     aetherCustomHttpHeaders := Map.empty[String, String]
   )

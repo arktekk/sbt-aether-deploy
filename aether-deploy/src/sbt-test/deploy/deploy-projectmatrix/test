@@ -1,0 +1,7 @@
+# Deploy a projectMatrix-derived project to a file:// repo
+> aetherDeploy
+$ exists target/repo/deploy-file
+$ exists target/repo/deploy-file/projectmatrixscripted_3/maven-metadata.xml
+$ exists target/repo/deploy-file/projectmatrixscripted_3/0.1.0/
+$ exists target/repo/deploy-file/projectmatrixscripted_3/0.1.0/projectmatrixscripted_3-0.1.0.jar
+$ exists target/repo/deploy-file/projectmatrixscripted_3/0.1.0/projectmatrixscripted_3-0.1.0.pom

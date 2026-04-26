@@ -30,8 +30,7 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.30.0") // For sbt-pg
   }
   ```
 
-  Or use the new [`attachSubArtifact`](#attaching-additional-sub-artefacts) helper,
-  which does not require either.
+  Or use the new [`attachSubArtifact`](#attaching-additional-sub-artefacts) helper, which does not require either.
 
 - If you call `AetherPlugin.deployIt` or `AetherPlugin.installIt` directly from
   a custom task, the trailing `TaskStreams` parameter is no longer `implicit` -
@@ -41,6 +40,14 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.30.0") // For sbt-pg
   AetherPlugin.deployIt(repo, localRepo, artifact, creds, headers)(streams.value)
   AetherPlugin.installIt(artifact, localRepo)(streams.value)
   ```
+
+- `version` was previously always sourced from `ThisBuild` scope. Project scoped
+  version would be silently ignored. Builds that set `ThisBuild / version := "..."`
+  are unaffected. Builds that set `version` independently per module will now have
+  publish coordinates matching generated POMs.
+
+  If you actually want aether to ignore an explicit project-scope `version` override
+  use: `version := (ThisBuild / version).value` in that project's settings.
 
 ## 0.30.0
 Only support new plugin layouts
