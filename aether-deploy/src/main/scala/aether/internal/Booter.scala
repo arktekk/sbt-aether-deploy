@@ -9,7 +9,7 @@ import org.eclipse.aether.{ConfigurationProperties, DefaultRepositorySystemSessi
 import sbt.std.TaskStreams
 
 import java.io.File
-import scala.collection.JavaConverters.mapAsJavaMap
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 object Booter {
@@ -20,7 +20,7 @@ object Booter {
 
   private def init(
       localRepoDir: File,
-      streams: TaskStreams[_],
+      streams: TaskStreams[?],
       coordinates: MavenCoordinates
   ): (RepositorySystem, DefaultRepositorySystemSession) = {
     val system = newRepositorySystem()
@@ -29,7 +29,7 @@ object Booter {
 
   def deploy(
       localRepoDir: File,
-      streams: TaskStreams[_],
+      streams: TaskStreams[?],
       coordinates: MavenCoordinates,
       customHeaders: Map[String, String],
       request: DeployRequest
@@ -37,14 +37,14 @@ object Booter {
     val (system, session) = init(localRepoDir, streams, coordinates)
     if (customHeaders.nonEmpty) {
       session
-        .setConfigProperty(ConfigurationProperties.HTTP_HEADERS + "." + request.getRepository.getId, mapAsJavaMap(customHeaders))
+        .setConfigProperty(ConfigurationProperties.HTTP_HEADERS + "." + request.getRepository.getId, customHeaders.asJava)
     }
     system.deploy(session, request)
   }
 
   def install(
       localRepoDir: File,
-      streams: TaskStreams[_],
+      streams: TaskStreams[?],
       coordinates: MavenCoordinates,
       request: InstallRequest
   ): Try[Unit] = Try {
@@ -52,10 +52,10 @@ object Booter {
     system.install(session, request)
   }
 
-  private def newSession(implicit
+  private def newSession(
       system: RepositorySystem,
       localRepoDir: File,
-      streams: TaskStreams[_],
+      streams: TaskStreams[?],
       coordinates: MavenCoordinates
   ): DefaultRepositorySystemSession = {
     val session   = new DefaultRepositorySystemSession()
@@ -63,7 +63,7 @@ object Booter {
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo))
     session.setTransferListener(new ConsoleTransferListener(streams.log))
     session.setRepositoryListener(new ConsoleRepositoryListener(streams.log))
-    session.setUserProperties(mapAsJavaMap(coordinates.props))
+    session.setUserProperties(coordinates.props.asJava)
     session.setProxySelector(SystemPropertyProxySelector.apply())
     session
   }

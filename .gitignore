@@ -20,3 +20,5 @@ target
 .metals
 .bloop
 .bsp
+.vscode
+**/sbt-test/**/disabled

@@ -1,7 +1,9 @@
 # SBT aether deploy plugin
-Deploys sbt-artifacts using Maven Artifact Provider. 
+Deploys sbt-artifacts using Maven Artifact Provider.
 
 The same behaviour as Maven should be expected.
+
+Cross-built for **sbt 1.x** and **sbt 2.x**.
 
 ## project/plugins.sbt
 
@@ -14,6 +16,42 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.30.0") // For sbt-pg
 ```
 
 # Breaking Changes
+
+## 0.31.0
+
+- Support sbt 2.x.
+
+- `version` is now sourced per-project (previously always taken from `ThisBuild / version`). Required to align with
+  sbt 2.x's bare-settings convention. See also
+  [Migrating `ThisBuild`](https://www.scala-sbt.org/2.x/docs/en/changes/migrating-from-sbt-1.x.html#migrating-thisbuild)
+  in the sbt 2 migration guide.
+
+  Most builds are unaffected: `version` falls back to `ThisBuild / version` via sbt's standard scope delegation. The
+  change matters only if your build sets both `ThisBuild / version` _and_ a different per-project `version` - publish
+  coordinates now match the project-scope value. To restore the old behaviour, set in the affected project:
+
+  ```scala
+  version := (ThisBuild / version).value
+  ```
+
+- Calling `AetherArtifact.attach` directly requires an implicit `xsbti.FileConverter` in scope. Supply it from the task
+  body (as below), or use the new [`attachSubArtifact` helper](#attaching-additional-sub-artefacts), which does not
+  require either:
+
+  ```scala
+  aetherArtifact := {
+    implicit val conv: xsbti.FileConverter = fileConverter.value
+    aetherArtifact.value.attach(myFileTask.value, "classifier", "ext")
+  }
+  ```
+
+- If you call `AetherPlugin.deployIt` or `AetherPlugin.installIt` directly from a custom task, the trailing
+  `TaskStreams` parameter is no longer `implicit` - pass `streams.value` as a regular argument:
+
+  ```scala
+  AetherPlugin.deployIt(repo, localRepo, artifact, creds, headers)(streams.value)
+  AetherPlugin.installIt(artifact, localRepo)(streams.value)
+  ```
 
 ## 0.30.0
 Only support new plugin layouts
@@ -110,6 +148,15 @@ overridePublishSignedLocalSettings
 
 ```scala
 overridePublishSignedBothSettings
+```
+
+## Attaching additional sub-artefacts
+
+Attach a packaged-file task (e.g. a zip produced by `Universal / packageBin`) as a
+sub-artefact alongside the main jar:
+
+```scala
+attachSubArtifact(Universal / packageBin, "dist", "zip")
 ```
 
 ## Add credentials

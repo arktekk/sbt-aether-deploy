@@ -12,19 +12,19 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
 
   private var lastLength: Int = 0
 
-  override def transferInitiated(event: TransferEvent) {
+  override def transferInitiated(event: TransferEvent): Unit = {
     val message = if (event.getRequestType == TransferEvent.RequestType.PUT) "Uploading" else "Downloading"
 
     logger.info(message + ": " + event.getResource.getRepositoryUrl + event.getResource.getResourceName)
   }
 
-  override def transferProgressed(event: TransferEvent) {
+  override def transferProgressed(event: TransferEvent): Unit = {
     val resource = event.getResource
     downloads.put(resource, event.getTransferredBytes)
 
     val buffer = new StringBuilder(64)
 
-    import scala.collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
     for (entry <- downloads.entrySet().asScala) {
       val total    = entry.getKey.getContentLength
       val complete = entry.getValue
@@ -40,14 +40,14 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
     logger.debug(buffer.toString())
   }
 
-  override def transferSucceeded(event: TransferEvent) {
+  override def transferSucceeded(event: TransferEvent): Unit = {
     transferCompleted(event);
 
     val resource      = event.getResource
     val contentLength = event.getTransferredBytes
     if (contentLength >= 0) {
       val t   = if (event.getRequestType == TransferEvent.RequestType.PUT) "Uploaded" else "Downloaded"
-      val len = if (contentLength >= 1024) toKB(contentLength) + " KB" else contentLength + " B"
+      val len = if (contentLength >= 1024) s"${toKB(contentLength)} KB" else s"$contentLength B"
 
       var throughput = ""
       val duration   = System.currentTimeMillis() - resource.getTransferStartTime
@@ -64,13 +64,13 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
     }
   }
 
-  override def transferFailed(event: TransferEvent) {
+  override def transferFailed(event: TransferEvent): Unit = {
     transferCompleted(event)
 
     logger.error(event.getException.getMessage)
   }
 
-  private def transferCompleted(event: TransferEvent) {
+  private def transferCompleted(event: TransferEvent): Unit = {
     downloads.remove(event.getResource)
 
     val buffer = new StringBuilder(64)
@@ -79,11 +79,11 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
     logger.info(buffer.toString())
   }
 
-  override def transferCorrupted(event: TransferEvent) {
+  override def transferCorrupted(event: TransferEvent): Unit = {
     logger.error(event.getException.getMessage)
   }
 
-  private def pad(buffer: StringBuilder, spaces: Int) {
+  private def pad(buffer: StringBuilder, spaces: Int): Unit = {
     var thespaces = spaces
     val block     = "                                        "
     while (thespaces > 0) {
@@ -97,13 +97,13 @@ class ConsoleTransferListener(logger: Logger) extends AbstractTransferListener {
 
   private def getStatus(complete: Long, total: Long): String = {
     if (total >= 1024) {
-      toKB(complete) + "/" + toKB(total) + " KB "
+      s"${toKB(complete)}/${toKB(total)} KB "
     } else if (total >= 0) {
-      complete + "/" + total + " B "
+      s"$complete/$total B "
     } else if (complete >= 1024) {
-      toKB(complete) + " KB "
+      s"${toKB(complete)} KB "
     } else {
-      complete + " B "
+      s"$complete B "
     }
   }
 
