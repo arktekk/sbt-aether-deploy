@@ -20,8 +20,23 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.30.0") // For sbt-pg
 ## 0.31.0
 
 - Support sbt 2.x.
-- Calling `AetherArtifact.attach` directly requires an implicit `xsbti.FileConverter`
-  in scope. Supply it from the task body:
+
+- `version` is now sourced per-project (previously always taken from `ThisBuild / version`). Required to align with
+  sbt 2.x's bare-settings convention. See also
+  [Migrating `ThisBuild`](https://www.scala-sbt.org/2.x/docs/en/changes/migrating-from-sbt-1.x.html#migrating-thisbuild)
+  in the sbt 2 migration guide.
+
+  Most builds are unaffected: `version` falls back to `ThisBuild / version` via sbt's standard scope delegation. The
+  change matters only if your build sets both `ThisBuild / version` _and_ a different per-project `version` - publish
+  coordinates now match the project-scope value. To restore the old behaviour, set in the affected project:
+
+  ```scala
+  version := (ThisBuild / version).value
+  ```
+
+- Calling `AetherArtifact.attach` directly requires an implicit `xsbti.FileConverter` in scope. Supply it from the task
+  body (as below), or use the new [`attachSubArtifact` helper](#attaching-additional-sub-artefacts), which does not
+  require either:
 
   ```scala
   aetherArtifact := {
@@ -30,24 +45,13 @@ addSbtPlugin("no.arktekk.sbt" % "aether-deploy-signed" % "0.30.0") // For sbt-pg
   }
   ```
 
-  Or use the new [`attachSubArtifact`](#attaching-additional-sub-artefacts) helper, which does not require either.
-
-- If you call `AetherPlugin.deployIt` or `AetherPlugin.installIt` directly from
-  a custom task, the trailing `TaskStreams` parameter is no longer `implicit` -
-  pass `streams.value` as a regular argument:
+- If you call `AetherPlugin.deployIt` or `AetherPlugin.installIt` directly from a custom task, the trailing
+  `TaskStreams` parameter is no longer `implicit` - pass `streams.value` as a regular argument:
 
   ```scala
   AetherPlugin.deployIt(repo, localRepo, artifact, creds, headers)(streams.value)
   AetherPlugin.installIt(artifact, localRepo)(streams.value)
   ```
-
-- `version` was previously always sourced from `ThisBuild` scope. Project scoped
-  version would be silently ignored. Builds that set `ThisBuild / version := "..."`
-  are unaffected. Builds that set `version` independently per module will now have
-  publish coordinates matching generated POMs.
-
-  If you actually want aether to ignore an explicit project-scope `version` override
-  use: `version := (ThisBuild / version).value` in that project's settings.
 
 ## 0.30.0
 Only support new plugin layouts
