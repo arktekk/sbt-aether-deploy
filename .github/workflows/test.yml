@@ -33,7 +33,7 @@ jobs:
           - sbt: '2'
             version-suffix: ''
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK ${{ env.JDK_RELEASE }}
         uses: actions/setup-java@v5
         with:
@@ -62,7 +62,7 @@ jobs:
     timeout-minutes: 20
     name: Static Code Checks
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK ${{ env.JDK_RELEASE }}
         uses: actions/setup-java@v5
         with:
@@ -82,7 +82,7 @@ jobs:
     needs: [ test, check ]
     if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK ${{ env.JDK_RELEASE }}
         uses: actions/setup-java@v5
         with:
@@ -112,7 +112,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Create GitHub Release
