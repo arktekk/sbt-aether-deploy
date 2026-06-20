@@ -3,7 +3,7 @@ description  := "Deploy in SBT using Sonatype Aether"
 
 val platforms: Seq[(scala: String, sbt: String)] = Seq(
   (scala = "2.12.21", sbt = "1.11.0"),
-  (scala = "3.8.3", sbt = "2.0.0-RC12")
+  (scala = "3.8.4", sbt = "2.0.0")
 )
 
 scalaVersion := platforms.head.scala
