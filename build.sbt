@@ -3,7 +3,7 @@ description  := "Deploy in SBT using Sonatype Aether"
 
 val platforms: Seq[(scala: String, sbt: String)] = Seq(
   (scala = "2.12.21", sbt = "1.11.0"),
-  (scala = "3.8.4", sbt = "2.0.0")
+  (scala = "3.9.0", sbt = "2.1.0")
 )
 
 scalaVersion := platforms.head.scala
@@ -41,7 +41,7 @@ lazy val aetherDeploySigned =
     .settings(scriptedSettings)
     .settings(
       name := "aether-deploy-signed",
-      addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.3.1")
+      addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.3.2")
     )
 
 lazy val aetherDeployRoot =
@@ -61,7 +61,7 @@ def commonSettings =
     },
     scalacOptions                 := {
       val shared = Seq("-deprecation", "-unchecked")
-      if (scala3.value) shared :+ "-release:17" else shared :+ "-release:8"
+      if (scala3.value) shared :+ "-release:17" else shared ++ Seq("-Xsource:3", "-release:8")
     }
   )
 

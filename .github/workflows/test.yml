@@ -23,10 +23,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    name: "[sbt ${{ matrix.sbt }}.x] Tests"
+    name: "[sbt ${{ matrix.sbt }}.x, Java ${{ matrix.java }}] Tests"
     strategy:
       fail-fast: false
       matrix:
+        java: [17, 21, 25]
+        sbt: ['1', '2']
         include:
           - sbt: '1'
             version-suffix: '2_12'
@@ -34,10 +36,10 @@ jobs:
             version-suffix: ''
     steps:
       - uses: actions/checkout@v7
-      - name: Set up JDK ${{ env.JDK_RELEASE }}
+      - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.JDK_RELEASE }}
+          java-version: ${{ matrix.java }}
           distribution: temurin
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
