@@ -5,4 +5,4 @@ updates:
     package-ecosystem: github-actions
     rebase-strategy: auto
     schedule:
-      interval: daily
+      interval: weekly
